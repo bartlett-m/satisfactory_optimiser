@@ -45,6 +45,23 @@ class Recipe(BaseSatisfactoryObject):
         # USE THE calcPowerFlowRate() FUNCTION INSTEAD
         self.__average_power_consumption = average_power_consumption
 
+    def __str__(self) -> str:
+        return (
+            "Recipe:\n"
+            f"{self.internal_class_identifier}\n"
+            "-----\n"
+            f"Known as: {self.user_facing_name}\n"
+            f"Takes {self.time_} seconds per craft"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.internal_class_identifier}:"
+            "{user_facing_name:"
+            f"{self.user_facing_name},time_:{self.time_}"
+            "}"
+        )
+
     def calcResourceFlowRate(
         self,
         period: float = 60,
