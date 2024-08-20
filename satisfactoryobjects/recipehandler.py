@@ -42,9 +42,11 @@ def handler(obj):
             )
         except ItemLookupError:
             toplevel_logger.error(
-                f"Skipping recipe {_class["ClassName"]} due to error looking up a resource"
+                f"Skipping recipe {_class["ClassName"]} "
+                "due to error looking up a resource"
             )
         except MachineLookupError:
             toplevel_logger.error(
-                f"Skipping recipe {_class["ClassName"]} due to error looking up all machines"
+                f"Skipping recipe {_class["ClassName"]} "
+                "due to error looking up all machines"
             )
