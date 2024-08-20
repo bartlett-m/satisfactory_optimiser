@@ -9,7 +9,7 @@ class Machine(BaseSatisfactoryObject):
         self,
         internal_class_identifier: str,
         user_facing_name: str,
-    ):
+    ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
         # power flow rates on variable power machines are defined as the
         # minimum for the recipe with the lowest minimum and the maximum for
@@ -26,6 +26,6 @@ class FixedPowerMachine(Machine):
         internal_class_identifier: str,
         user_facing_name: str,
         power_flow_rate: float
-    ):
+    ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
         self.power_flow_rate = power_flow_rate

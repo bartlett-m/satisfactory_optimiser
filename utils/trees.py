@@ -5,7 +5,7 @@ from typing import Type
 
 
 class AbstractNode(ABC):
-    def __init__(self, value):
+    def __init__(self, value) -> None:
         self._value = value
 
     @property

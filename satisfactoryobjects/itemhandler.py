@@ -6,12 +6,8 @@ toplevel_logger = logging.getLogger(__name__)
 items: dict[str, Item] = dict()
 
 
-def handler(obj):
-    _debug_temp = False
+def handler(obj) -> None:
     for _class in obj["Classes"]:
-        if not _debug_temp:
-            _debug_temp = True
-            toplevel_logger.debug(_class)
         items[_class["ClassName"]] = Item(
             _class["ClassName"],
             _class["mDisplayName"],

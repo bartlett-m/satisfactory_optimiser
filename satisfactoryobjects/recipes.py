@@ -34,7 +34,7 @@ class Recipe(BaseSatisfactoryObject):
         machines: list[Machine],
         time_: float,
         average_power_consumption: float = 0.0
-    ):
+    ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
         self.dependencies = dependencies
         self.products = products
@@ -89,7 +89,7 @@ class Recipe(BaseSatisfactoryObject):
         # every recipe seems to only have 1 registered machine
         # (presumably not the workbench)
         machine_index: int = 0
-    ):
+    ) -> float:
         # time not used since power flow is measured in megawatts in this game
         if positive_direction == Direction.BIDIRECTIONAL:
             raise ValueError(

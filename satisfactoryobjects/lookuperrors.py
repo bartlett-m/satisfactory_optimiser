@@ -1,3 +1,6 @@
+"""Errors raised when looking up satisfactory objects fails"""
+
+
 class BaseSatisfactoryObjectLookupError(LookupError):
     pass
 

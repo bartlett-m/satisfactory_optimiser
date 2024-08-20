@@ -11,7 +11,7 @@ class Item(BaseSatisfactoryObject):
         user_facing_name: str,
         energy_value,
         is_fluid=False
-    ):
+    ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
         # if is_fluid then energy value mEnergyValue probably needs different
         # handling

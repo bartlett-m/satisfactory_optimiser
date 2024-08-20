@@ -11,7 +11,7 @@ class SatisfactoryNativeClassHandler:
     handlers: dict[str, Type["SatisfactoryNativeClassHandler"]] = dict()
     _handler_queue: PriorityQueue[PrioritisedItem] = PriorityQueue()
 
-    def __init__(self, class_name, handler_function, defer_pass=0):
+    def __init__(self, class_name, handler_function, defer_pass=0) -> None:
         SatisfactoryNativeClassHandler.logger.debug(
             f"Registering new native class handler for class {class_name}"
         )
@@ -22,7 +22,7 @@ class SatisfactoryNativeClassHandler:
         #     SatisfactoryNativeClassHandler._max_defer_pass = defer_pass
         SatisfactoryNativeClassHandler.handlers[class_name] = self
 
-    def enqueue_handle(obj):
+    def enqueue_handle(obj) -> None:
         try:
             handler = SatisfactoryNativeClassHandler.handlers[
                 obj["NativeClass"]
@@ -53,11 +53,11 @@ class SatisfactoryNativeClassHandler:
             )
 
     # some test handlers
-    def noop(obj):
+    def noop(obj) -> None:
         """Handler that does nothing"""
         pass
 
-    def log(obj):
+    def log(obj) -> None:
         """Handler that logs the object"""
         SatisfactoryNativeClassHandler.logger.debug(obj)
 
