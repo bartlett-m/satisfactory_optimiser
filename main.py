@@ -6,7 +6,8 @@ from satisfactoryobjects import (
     itemhandler,
     recipehandler,
     machinehandler,
-    nativeclasses
+    nativeclasses,
+    recipelookup
 )
 
 toplevel_logger = logging.getLogger(__name__)
@@ -124,14 +125,14 @@ def main():
 
     print(
         [
-            item.user_facing_name
+            item
             for _, item
             in itemhandler.items.items()
         ]
     )
     print(
         [
-            recipe.user_facing_name
+            recipe
             for _, recipe
             in recipehandler.recipes.items()
         ]
@@ -141,6 +142,16 @@ def main():
             recipe.calcPowerFlowRate()
             for _, recipe
             in recipehandler.recipes.items()
+        ]
+    )
+
+    print(
+        [
+            recipe
+            for recipe
+            in recipelookup.lookup_recipes(
+                itemhandler.items["Desc_IronPlate_C"]
+            )
         ]
     )
 
