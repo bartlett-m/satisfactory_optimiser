@@ -52,7 +52,9 @@ class Recipe(BaseSatisfactoryObject):
         positive_direction: Direction = Direction.OUT
     ):
         if positive_direction == Direction.BIDIRECTIONAL:
-            raise ValueError("Only one direction may be considered a positive resource flow")
+            raise ValueError(
+                "Only one direction may be considered a positive resource flow"
+            )
         _ret: list[RecipeResourceFlowData] = list()
         crafts_per_period = period / self.time_
         if calculated_direction & Direction.IN:
@@ -60,7 +62,11 @@ class Recipe(BaseSatisfactoryObject):
                 _ret.append(
                     RecipeResourceFlowData(
                         dependency.item,
-                        dependency.amount * crafts_per_period * (1 if positive_direction == Direction.IN else -1)
+                        dependency.amount * crafts_per_period * (
+                            1
+                            if positive_direction == Direction.IN
+                            else -1
+                        )
                     )
                 )
         if calculated_direction & Direction.OUT:
@@ -68,7 +74,11 @@ class Recipe(BaseSatisfactoryObject):
                 _ret.append(
                     RecipeResourceFlowData(
                         product.item,
-                        product.amount * crafts_per_period * (-1 if positive_direction == Direction.IN else 1)
+                        product.amount * crafts_per_period * (
+                            -1
+                            if positive_direction == Direction.IN
+                            else 1
+                        )
                     )
                 )
         return _ret
@@ -82,12 +92,22 @@ class Recipe(BaseSatisfactoryObject):
     ):
         # time not used since power flow is measured in megawatts in this game
         if positive_direction == Direction.BIDIRECTIONAL:
-            raise ValueError("Only one direction may be considered a positive power flow")
+            raise ValueError(
+                "Only one direction may be considered a positive power flow"
+            )
         used_machine = self.machines[machine_index]
         if type(used_machine) is FixedPowerMachine:
-            return used_machine.power_flow_rate * (-1 if positive_direction == Direction.IN else 1)
+            return used_machine.power_flow_rate * (
+                -1
+                if positive_direction == Direction.IN
+                else 1
+            )
         else:
-            return self.__average_power_consumption * (-1 if positive_direction == Direction.IN else 1)
+            return self.__average_power_consumption * (
+                -1
+                if positive_direction == Direction.IN
+                else 1
+            )
 
     def parseResources(
         unparsed_resources: str,
@@ -114,7 +134,9 @@ class Recipe(BaseSatisfactoryObject):
             except KeyError:
                 # item not found
                 toplevel_logger.error(
-                    f"Resource {parsed_class} of recipe {recipe_name} not registered!"
+                    f"Resource {parsed_class} "
+                    f"of recipe {recipe_name} "
+                    "not registered!"
                 )
                 raise ItemLookupError("Recipe references nonexistent item!")
             # remove the Amount= and convert to integer
@@ -154,9 +176,12 @@ class Recipe(BaseSatisfactoryObject):
             except KeyError:
                 # dont stop here so other machines can also be parsed
                 toplevel_logger.error(
-                    f"Machine {parsed_class} used to make recipe {recipe_name} not registered!"
+                    f"Machine {parsed_class} "
+                    f"used to make recipe {recipe_name} "
+                    "not registered!"
                 )
-                # raise MachineLookupError("Recipe references nonexistent machine!")
         if len(result) == 0:
-            raise MachineLookupError("Recipe does not reference any existing machine!")
+            raise MachineLookupError(
+                "Recipe does not reference any existing machine!"
+            )
         return result
