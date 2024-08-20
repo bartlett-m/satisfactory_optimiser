@@ -11,3 +11,7 @@ class ItemLookupError(BaseSatisfactoryObjectLookupError):
 
 class MachineLookupError(BaseSatisfactoryObjectLookupError):
     pass
+
+
+class RecipeLookupError(BaseSatisfactoryObjectLookupError):
+    pass
