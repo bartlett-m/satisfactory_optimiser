@@ -7,5 +7,6 @@ __all__ = [
         "basesatisfactoryobject",
         "machinehandler",
         "machines",
-        "lookuperrors"
+        "lookuperrors",
+        "recipelookup"
     ]
