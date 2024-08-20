@@ -24,7 +24,9 @@ class SatisfactoryNativeClassHandler:
 
     def enqueue_handle(obj):
         try:
-            handler = SatisfactoryNativeClassHandler.handlers[obj["NativeClass"]]
+            handler = SatisfactoryNativeClassHandler.handlers[
+                obj["NativeClass"]
+            ]
             SatisfactoryNativeClassHandler.logger.debug(
                     f"Enqueueing handling of class {obj["NativeClass"]}"
                 )
@@ -42,7 +44,9 @@ class SatisfactoryNativeClassHandler:
         SatisfactoryNativeClassHandler.logger.info("Running handlers")
         while not SatisfactoryNativeClassHandler._handler_queue.empty():
             obj = SatisfactoryNativeClassHandler._handler_queue.get().item
-            handler = SatisfactoryNativeClassHandler.handlers[obj["NativeClass"]]
+            handler = SatisfactoryNativeClassHandler.handlers[
+                obj["NativeClass"]
+            ]
             handler._handle(obj)
             SatisfactoryNativeClassHandler.logger.debug(
                 f"Handled class {obj["NativeClass"]}"
@@ -111,7 +115,9 @@ def denamespace_satisfactory_classname(namespaced_classname: str) -> str:
     if len(_parser_temp) != 2:
         _log_denamespace_failure(
             namespaced_classname,
-            f"Partitioned segment {unparsed_classname} appears to contain {len(_parser_temp)-1} occurences of the character '.'"
+            f"Partitioned segment {unparsed_classname} "
+            f"appears to contain {len(_parser_temp)-1} "
+            "occurences of the character '.'"
         )
 
     # handle added quotes
