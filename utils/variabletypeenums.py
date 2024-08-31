@@ -7,3 +7,4 @@ class VariableType(Enum):
     NORMAL = 1
     SLACK = 2
     CONSTANT = 3
+    OBJECTIVE = 4
