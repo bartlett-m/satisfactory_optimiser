@@ -56,6 +56,9 @@ class InequalityTypeEnum(IntFlag):
             # If such a configuration arises, then the enum does not represent
             # a valid inequality that has a corresponding operator.  Therefore,
             # we throw an exception rather than permitting undefined behaviour.
+
+            # this format string will output the currently-set flags in binary
+            # see https://stackoverflow.com/a/699891
             raise ValueError(
                 "Enum bitmask {0:b} corrupt for a InequalityTypeEnum".format(
                     self._value_
