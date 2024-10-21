@@ -13,7 +13,7 @@ class VariableType(Enum):
     OBJECTIVE = 4
 
 
-class InequalityTypeEnum(IntFlag):
+class InequalityType(IntFlag):
     # the base flags
     EQUAL = 2**0
     GREATER_THAN = 2**1
