@@ -77,12 +77,16 @@ class TableauRow():
 
 class Tableau():
     def __init__(self) -> None:
-        self._tableau = [TableauRow([Fraction(coef) for coef in row]) for row in [
-            # a, b, s_1, s_2, P, RHS
-            [1, 1, 1, 0, 0, 40],
-            [4, 1, 0, 1, 0, 100],
-            [-20, -10, 0, 0, 1, 0]  # objective row
-        ]]
+        self._tableau = [
+            TableauRow([Fraction(coef) for coef in row])
+            for row
+            in [
+                # a, b, s_1, s_2, P, RHS
+                [1, 1, 1, 0, 0, 40],
+                [4, 1, 0, 1, 0, 100],
+                [-20, -10, 0, 0, 1, 0]  # objective row
+            ]
+        ]
 
     def _get_pivot_column(self) -> int:
         # get the objective row and find the value of the most negative entry
