@@ -9,7 +9,9 @@ toplevel_logger = logging.getLogger(__name__)
 class SimplexAlgorithmDoneException(AlgorithmDoneException):
     """Exception raised when the simplex algorithm completes"""
     def __init__(self):
-        super.__init__("Simplex algorithm done")
+        super(SimplexAlgorithmDoneException, self).__init__(
+            "Simplex algorithm done"
+        )
 
 
 class TableauRow():
@@ -51,10 +53,31 @@ class TableauRow():
         # commutable
         return self.__add__(other)
 
+    def __truediv__(self, other: object) -> type["TableauRow"]:
+        return TableauRow(
+            [
+                coefficient / other
+                for coefficient
+                in self._row
+            ]
+        )
+
+    def __rtruediv__(self, other: object) -> type["TableauRow"]:
+        return TableauRow(
+            [
+                other / coefficient
+                for coefficient
+                in self._row
+            ]
+        )
+
+    def min(self):
+        return min(self._row)
+
 
 class Tableau():
     def __init__(self) -> None:
-        self._tableau = [[Fraction(coef) for coef in row] for row in [
+        self._tableau = [TableauRow([Fraction(coef) for coef in row]) for row in [
             # a, b, s_1, s_2, P, RHS
             [1, 1, 1, 0, 0, 40],
             [4, 1, 0, 1, 0, 100],
@@ -63,20 +86,20 @@ class Tableau():
 
     def _get_pivot_column(self) -> int:
         # get the objective row and find the value of the most negative entry
-        most_neg = min(self._tableau[-1])
+        most_neg = self._tableau[-1].min()
         # if there are no negative entries in the objective row, then the
         # algorithm is complete
         if most_neg >= 0:
             raise SimplexAlgorithmDoneException()
         # otherwise, get the index of this value.  this is the pivot column.
-        return self._tableau[-1].index(most_neg)
+        return self._tableau[-1]._row.index(most_neg)
         # note that the algorithm will work with any negative entry in the
         # objective row, however it is more optimal to use the most negative
         # entry.
 
     def _get_pivot_row(self, pivot_column: int) -> int:
         row_ratios: list[Fraction] = [
-            row[-1] / row[pivot_column]
+            row._row[-1] / row._row[pivot_column]
             for row
             # exclude the objective row via slicing
             in self._tableau[:-1]
@@ -100,27 +123,23 @@ class Tableau():
         pivoted_row = self._tableau[row]
         # get a copy of the pivot element, which will be used to modify the
         # pivot row
-        element = pivoted_row[column]
+        element = pivoted_row._row[column]
         # divide each entry in the pivot row by the pivot element
-        pivoted_row = [
-            entry/element
-            for entry
-            in pivoted_row
-        ]
+        pivoted_row = pivoted_row/element
         # make the entry in the pivot column zero for every other row
         self._tableau = list(map(
             # strip out the index variable we no longer need, then subtract
             # the pivoted row from each other row to make the entry in the
             # pivot column equal to zero for these rows
-            lambda indexed_row: [
+            lambda indexed_row: TableauRow([
                 entry - (
-                    pivoted_row[idx] * (
-                        indexed_row[1][column] / pivoted_row[column]
+                    pivoted_row._row[idx] * (
+                        indexed_row[1]._row[column] / pivoted_row._row[column]
                     )
                 )
                 for idx, entry
-                in enumerate(indexed_row[1])
-            ],
+                in enumerate(indexed_row[1]._row)
+            ]),
             # get every other row
             filterfalse(
                 lambda indexed_row: indexed_row[0] == row,
@@ -131,7 +150,7 @@ class Tableau():
 
 
 # testing
-if __name__ == "__main__":
+def __test() -> None:
     t = Tableau()
     for row in t._tableau:
         print(row)
