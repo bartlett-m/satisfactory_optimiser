@@ -5,6 +5,46 @@ from itertools import filterfalse
 toplevel_logger = logging.getLogger(__name__)
 
 
+class TableauRow():
+    def __init__(self, row: list[Fraction]) -> None:
+        self._row = row
+
+    def __mul__(self, other: object) -> type["TableauRow"]:
+        return TableauRow(
+            [
+                coefficient * other
+                for coefficient
+                in self._row
+            ]
+        )
+
+    def __rmul__(self, other: object) -> type["TableauRow"]:
+        return TableauRow(
+            [
+                other * coefficient
+                for coefficient
+                in self._row
+            ]
+        )
+
+    def __add__(self, other: type["TableauRow"]) -> type["TableauRow"]:
+        return TableauRow(
+            [
+                coefficient_1 + coefficient_2
+                for coefficient_1, coefficient_2
+                in zip(
+                    self._row,
+                    other._row
+                )
+            ]
+        )
+
+    def __radd__(self, other: type["TableauRow"]) -> type["TableauRow"]:
+        # the type used is basically guaranteed here, and addition is
+        # commutable
+        return self.__add__(other)
+
+
 class Tableau():
     def __init__(self) -> None:
         self._tableau = [[Fraction(coef) for coef in row] for row in [
