@@ -1,8 +1,15 @@
 import logging
 from fractions import Fraction
 from itertools import filterfalse
+from utils.exceptions import AlgorithmDoneException
 
 toplevel_logger = logging.getLogger(__name__)
+
+
+class SimplexAlgorithmDoneException(AlgorithmDoneException):
+    """Exception raised when the simplex algorithm completes"""
+    def __init__(self):
+        super.__init__("Simplex algorithm done")
 
 
 class TableauRow():
@@ -60,7 +67,7 @@ class Tableau():
         # if there are no negative entries in the objective row, then the
         # algorithm is complete
         if most_neg >= 0:
-            raise Exception("simplex done")  # TODO: use a custom exception
+            raise SimplexAlgorithmDoneException()
         # otherwise, get the index of this value.  this is the pivot column.
         return self._tableau[-1].index(most_neg)
         # note that the algorithm will work with any negative entry in the
