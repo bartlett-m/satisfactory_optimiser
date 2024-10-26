@@ -74,9 +74,14 @@ class TableauRow():
     def min(self):
         return min(self._row)
 
+    def index(self, item):
+        return self._row.index(item)
+
 
 class Tableau():
     def __init__(self) -> None:
+        # TODO: this temporary jank needs to be replaced
+        # with an actual constructor.
         self._tableau = [
             TableauRow([Fraction(coef) for coef in row])
             for row
@@ -96,7 +101,7 @@ class Tableau():
         if most_neg >= 0:
             raise SimplexAlgorithmDoneException()
         # otherwise, get the index of this value.  this is the pivot column.
-        return self._tableau[-1]._row.index(most_neg)
+        return self._tableau[-1].index(most_neg)
         # note that the algorithm will work with any negative entry in the
         # objective row, however it is more optimal to use the most negative
         # entry.
