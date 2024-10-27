@@ -73,6 +73,11 @@ class TableauRow():
             return NotImplemented
         return self.__add__(other*-1)
 
+    def __eq__(self, other: object) -> bool:
+        if issubclass(type(other), TableauRow):
+            return self._row == other._row
+        return self._row == other
+
     def __repr__(self) -> str:
         return self._row.__repr__()
 
