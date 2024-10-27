@@ -37,6 +37,8 @@ class TableauRow():
         )
 
     def __add__(self, other: type["TableauRow"]) -> type["TableauRow"]:
+        if not issubclass(type(other), TableauRow):
+            return NotImplemented
         return TableauRow(
             [
                 coefficient_1 + coefficient_2
@@ -47,11 +49,6 @@ class TableauRow():
                 )
             ]
         )
-
-    def __radd__(self, other: type["TableauRow"]) -> type["TableauRow"]:
-        # the type used is basically guaranteed here, and addition is
-        # commutable
-        return self.__add__(other)
 
     def __truediv__(self, other: object) -> type["TableauRow"]:
         return TableauRow(
