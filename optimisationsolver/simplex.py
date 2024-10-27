@@ -68,6 +68,11 @@ class TableauRow():
             ]
         )
 
+    def __sub__(self, other: type["TableauRow"]) -> type["TableauRow"]:
+        if not issubclass(type(other), TableauRow):
+            return NotImplemented
+        return self.__add__(other*-1)
+
     def __repr__(self) -> str:
         return self._row.__repr__()
 
@@ -137,21 +142,21 @@ class Tableau():
         # pivot row
         element = pivoted_row._row[column]
         # divide each entry in the pivot row by the pivot element
+        # NOTE: This means that the "element" variable CANNOT be used in the
+        # coming lambda function since it is now out of date!
         pivoted_row = pivoted_row/element
         # make the entry in the pivot column zero for every other row
         self._tableau = list(map(
             # strip out the index variable we no longer need, then subtract
             # the pivoted row from each other row to make the entry in the
             # pivot column equal to zero for these rows
-            lambda indexed_row: TableauRow([
-                entry - (
-                    pivoted_row._row[idx] * (
+            lambda indexed_row: (
+                indexed_row[1] - (
+                    pivoted_row * (
                         indexed_row[1]._row[column] / pivoted_row._row[column]
                     )
                 )
-                for idx, entry
-                in enumerate(indexed_row[1]._row)
-            ]),
+            ),
             # get every other row
             filterfalse(
                 lambda indexed_row: indexed_row[0] == row,
