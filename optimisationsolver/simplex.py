@@ -71,6 +71,12 @@ class TableauRow():
             ]
         )
 
+    def __repr__(self) -> str:
+        return self._row.__repr__()
+
+    def __str__(self) -> str:
+        return self._row.__str__()
+
     def min(self):
         return min(self._row)
 
