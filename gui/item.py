@@ -6,7 +6,13 @@ from PySide6.QtWidgets import QGridLayout, QLabel, QFrame
 
 
 class Item(QFrame):
-    def __init__(self, name: str, flow_rate: Rational, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        name: str,
+        flow_rate: Rational,
+        *args,
+        **kwargs
+    ) -> None:
         super(Item, self).__init__(*args, **kwargs)
 
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
