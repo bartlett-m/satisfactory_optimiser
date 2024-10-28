@@ -30,5 +30,6 @@ class Item(QFrame):
         layout.addWidget(QLabel("temp hardcoded value"), 4, 2)
 
         # also do image if I can figure out how to load those from the game
+        # spoiler: this looks hard, probably remove the placeholder space
 
         self.setLayout(layout)
