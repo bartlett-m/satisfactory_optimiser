@@ -5,6 +5,7 @@ from utils.exceptions import AlgorithmDoneException
 
 toplevel_logger = logging.getLogger(__name__)
 
+
 class SimplexAlgorithmDoneException(AlgorithmDoneException):
     """Exception raised when the simplex algorithm completes"""
     def __init__(self):
@@ -104,7 +105,10 @@ _temp_debug_tableau = [
 
 
 class Tableau():
-    def __init__(self, tableau: list[TableauRow] = _temp_debug_tableau) -> None:
+    def __init__(
+        self,
+        tableau: list[TableauRow] = _temp_debug_tableau
+    ) -> None:
         # TODO: this temporary jank needs to be replaced
         # with an actual constructor.
         self._tableau = tableau
