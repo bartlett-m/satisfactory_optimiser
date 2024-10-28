@@ -5,7 +5,6 @@ from utils.exceptions import AlgorithmDoneException
 
 toplevel_logger = logging.getLogger(__name__)
 
-
 class SimplexAlgorithmDoneException(AlgorithmDoneException):
     """Exception raised when the simplex algorithm completes"""
     def __init__(self):
@@ -91,20 +90,24 @@ class TableauRow():
         return self._row.index(item)
 
 
+# for backwards compatibility with old debug code
+_temp_debug_tableau = [
+    TableauRow([Fraction(coef) for coef in row])
+    for row
+    in [
+        # a, b, s_1, s_2, P, RHS
+        [1, 1, 1, 0, 0, 40],
+        [4, 1, 0, 1, 0, 100],
+        [-20, -10, 0, 0, 1, 0]  # objective row
+    ]
+]
+
+
 class Tableau():
-    def __init__(self) -> None:
+    def __init__(self, tableau: list[TableauRow] = _temp_debug_tableau) -> None:
         # TODO: this temporary jank needs to be replaced
         # with an actual constructor.
-        self._tableau = [
-            TableauRow([Fraction(coef) for coef in row])
-            for row
-            in [
-                # a, b, s_1, s_2, P, RHS
-                [1, 1, 1, 0, 0, 40],
-                [4, 1, 0, 1, 0, 100],
-                [-20, -10, 0, 0, 1, 0]  # objective row
-            ]
-        ]
+        self._tableau = tableau
 
     def _get_pivot_column(self) -> int:
         # get the objective row and find the value of the most negative entry
@@ -169,6 +172,13 @@ class Tableau():
             )
         ))
         self._tableau.insert(row, pivoted_row)
+
+    def pivot_until_done(self) -> None:
+        try:
+            while True:
+                self.pivot()
+        except SimplexAlgorithmDoneException:
+            return  # done now
 
 
 # testing
