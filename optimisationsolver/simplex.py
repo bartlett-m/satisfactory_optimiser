@@ -183,22 +183,3 @@ class Tableau():
                 self.pivot()
         except SimplexAlgorithmDoneException:
             return  # done now
-
-
-# testing
-def __test() -> None:
-    t = Tableau()
-    for row in t._tableau:
-        print(row)
-    t.pivot()
-    print()
-    for row in t._tableau:
-        print(row)
-    t.pivot()
-    print()
-    for row in t._tableau:
-        print(row)
-    t.pivot()
-    print()
-    for row in t._tableau:
-        print(row)
