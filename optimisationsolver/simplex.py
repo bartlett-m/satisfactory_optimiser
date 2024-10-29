@@ -1,4 +1,5 @@
 import logging
+from numbers import Rational
 from fractions import Fraction
 from itertools import filterfalse
 from utils.exceptions import AlgorithmDoneException
@@ -12,6 +13,15 @@ class SimplexAlgorithmDoneException(AlgorithmDoneException):
         super(SimplexAlgorithmDoneException, self).__init__(
             "Simplex algorithm done"
         )
+
+
+# helper utility that handles the special case of division by zero in the
+# simplex algorithm
+def pivot_div(numerator: Rational, denominator: Rational) -> Fraction:
+    try:
+        return Fraction(numerator, denominator)
+    except ZeroDivisionError:
+        return 0
 
 
 class TableauRow():
