@@ -26,9 +26,26 @@ class TestTableau(unittest.TestCase):
                 [0, 0, Fraction(20, 3), Fraction(10, 3), 1, 600]
             ]
         )
+        # it looks like the video i got the example from is incorrect
+        # (tested algorithm by hand)
+        # so the -1/3 in col 4 row 2 is now +1/3
+        # and the 15/4 in col 4 row 3 is now 10/3
 
     def test_solve_1(self):
-        # when pivoting, this test will try a division by zero
+        # When pivoting, this test will try a division by zero unless row
+        # ratios resulting in a zero divison are filtered.  This division by
+        # zero will occur on the second pivot.  If the row with the zero
+        # division ratio is used as the pivot row, then it will also result
+        # in a zero division during the actual pivot.
+        #
+        # The fourth iteration additionally returns to the second iteration in
+        # this tableau i.e. it will cycle.  This is not prevented by using
+        # Bland's rule.  This is as the cycling is caused because my prior
+        # implementation of the algorithm pivots on a row with a negative
+        # pivot element if the right-hand-side is zero, however it should only
+        # pivot on a row with a right-hand-side of zero if the pivot element
+        # is positive.  My new implementation of the algorithm now checks for
+        # this specific case and skips such rows.
         t = simplex.Tableau(
             [
                 simplex.TableauRow([Fraction(x) for x in [1, 1, 1, 1, 0, 0, 0, 10]]),
@@ -38,3 +55,12 @@ class TestTableau(unittest.TestCase):
             ]
         )
         t.pivot_until_done()
+        self.assertEqual(
+            t._tableau,
+            [
+                [0, 1, 0, Fraction(1, 5), Fraction(-1, 5), Fraction(-1, 5), 0, Fraction(4, 5)],
+                [1, 0, 0, Fraction(1, 10), Fraction(2, 5), Fraction(-1, 10), 0, Fraction(2, 5)],
+                [0, 0, 1, Fraction(7, 10), Fraction(-1, 5), Fraction(3, 10), 0, Fraction(44, 5)],
+                [0, 0, 0, Fraction(27, 10), Fraction(9, 5), Fraction(13, 10), 1, Fraction(348, 10)]
+            ]
+        )
