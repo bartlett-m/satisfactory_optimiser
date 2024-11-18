@@ -1,7 +1,8 @@
 import logging
 from numbers import Rational
 from fractions import Fraction
-from itertools import filterfalse
+from typing import Iterable
+from itertools import filterfalse, repeat, chain
 from utils.exceptions import AlgorithmDoneException
 
 toplevel_logger = logging.getLogger(__name__)
@@ -135,14 +136,165 @@ _temp_debug_tableau = [
 ]
 
 
+class Variable():
+    def __init__(
+        self,
+        id,
+        coefficient: Rational,
+    ):
+        self.id = id
+        self.coefficient = coefficient
+
+    def __iter__(self):
+        # to allow unpacking
+        # see https://stackoverflow.com/a/37837754
+        return iter((self.id, self.coefficient))
+
+
+class Inequality():
+    def __init__(
+        self,
+        lhs: Iterable[Variable],
+        rhs: Rational
+    ):
+        self._lhs = {
+            var.id: var.coefficient
+            for var
+            in lhs
+        }  # make this a dictionary of variable_id:coefficient and other data
+        # see comment in tableau_left_padded about casting to fraction
+        self.rhs = Fraction(rhs)
+
+    def _get_lhs(self):
+        return [Variable(_id, coef) for _id, coef in self._lhs.items()]
+
+    lhs = property(
+        fget=_get_lhs,
+        doc="The left hand side of the inequality (minus the \
+            objective variable), as a list of variables"
+    )
+
+    def _get_obj_coef(self) -> Rational:
+        return Fraction(0)
+
+    objective_coefficient = property(
+        fget=_get_obj_coef,
+        doc="The coefficient of the objective variable"
+    )
+
+    def tableau_left_padded(self, _vars: set[Variable]):
+        _sorted_vars = list(_vars)
+        # to prevent fun bugs when the order of variables isnt consistent
+        # throughout the tableau
+        # python sets are sorted from my experience, but considering how long
+        # i have spent debugging this file in particular i dont want to take
+        # chances
+        _sorted_vars.sort()
+
+        for variable_id in _sorted_vars:
+            # this isnt all executed at once (it is paused after each yield
+            # until the next item is requested)
+            try:
+                variable_coef = self._lhs[variable_id]
+                # cast to fraction here to ensure that when the actual tableau
+                # gets pivoted then the fraction division implementation is
+                # used instead of the integer division implementation, which
+                # would return floats which are imprecise and also cannot be
+                # used in the pivot_div function to construct fractions, since
+                # float does not subclass rational.
+                yield Fraction(variable_coef)
+            except KeyError:
+                # no such variable in this inequality
+                yield Fraction(0)
+
+
+class ObjectiveEquation(Inequality):
+    def __init__(
+        self,
+        lhs: Iterable[Variable],
+        rhs: Rational,
+        objective_coefficient: Rational
+    ):
+        super().__init__(lhs, rhs)
+        self._objective_coefficient = objective_coefficient
+
+    def _get_obj_coef(self) -> Rational:
+        return Fraction(self._objective_coefficient)
+
+    objective_coefficient = property(
+        fget=_get_obj_coef,
+        doc="The coefficient of the objective variable"
+    )
+
+
 class Tableau():
     def __init__(
         self,
-        tableau: list[TableauRow] = _temp_debug_tableau
+        tableau: list[TableauRow] = _temp_debug_tableau,
+        inequalities: list[Inequality] = [],
     ) -> None:
-        # TODO: this temporary jank needs to be replaced
-        # with an actual constructor.
-        self._tableau = tableau
+        if inequalities == []:
+            # TODO: this temporary jank needs to be replaced
+            # with an actual constructor.
+            self._tableau = tableau
+            # legacy constructor used in some tests.
+            # it is entirely ignored if the inequalities argument is set.
+            # to do so, the tableau argument can be left as the default
+            # and the inequalities argument is set by its keyword.
+            # this legacy parameter will eventually be removed
+        else:
+            self._tableau: list[list[Fraction]] = []
+            _vars = set()
+            for inequality in inequalities:
+                for variable_id in inequality._lhs:
+                    # inequality._lhs is the internal dictionary
+                    # representation of the inequality.
+                    # since we only care about the keys (variable ids) it is
+                    # quicker to just iterate through the keys directly,
+                    # since this does not involve initialising new Variable
+                    # objects.
+                    _vars.add(variable_id)
+
+            for inequality_idx, inequality in enumerate(inequalities):
+                # cast to list to immediately evaluate the iterable
+                _row = list(
+                    # itertools chain to stitch various iterables for
+                    # different parts of the tableau together
+                    chain.from_iterable(
+                        [
+                            # this function returns an iterable that returns
+                            # all the left side of the tableau, with any
+                            # variables that dont exist being set to zero
+                            inequality.tableau_left_padded(_vars),
+                            # filler zeroes for slack variables
+                            repeat(Fraction(0), inequality_idx),
+                            # for slack variable (do not include for the
+                            # objective row)
+                            (
+                                []
+                                if issubclass(
+                                    type(inequality),
+                                    ObjectiveEquation
+                                )
+                                else [Fraction(1)]
+                            ),
+                            # remaining zeroes for slack variables
+                            # (max ensures that there isnt -1 or -2 repeats
+                            # for the objective row)
+                            repeat(
+                                Fraction(0),
+                                max([
+                                    (len(inequalities) - (inequality_idx + 2)),
+                                    0
+                                ])
+                            ),
+                            # objective coefficient and right-hand-side of the
+                            # inequality
+                            [inequality.objective_coefficient, inequality.rhs]
+                        ]
+                    )
+                )
+                self._tableau.append(TableauRow(_row))
 
     def _get_pivot_column(self) -> int:
         # # get the objective row and find the value of the most negative entry
