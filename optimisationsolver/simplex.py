@@ -182,16 +182,9 @@ class Inequality():
         doc="The coefficient of the objective variable"
     )
 
-    def tableau_left_padded(self, _vars: set[Variable]):
-        _sorted_vars = list(_vars)
-        # to prevent fun bugs when the order of variables isnt consistent
-        # throughout the tableau
-        # python sets are sorted from my experience, but considering how long
-        # i have spent debugging this file in particular i dont want to take
-        # chances
-        _sorted_vars.sort()
+    def tableau_left_padded(self, _vars: list[Variable]):
 
-        for variable_id in _sorted_vars:
+        for variable_id in _vars:
             # this isnt all executed at once (it is paused after each yield
             # until the next item is requested)
             try:
@@ -255,6 +248,25 @@ class Tableau():
                     # objects.
                     _vars.add(variable_id)
 
+            _sorted_vars = list(_vars)
+            # to prevent fun bugs when the order of variables isnt consistent
+            # throughout the tableau
+            # python sets are sorted from my experience, but considering how long
+            # i have spent debugging this file in particular i dont want to take
+            # chances
+            _sorted_vars.sort()
+
+            self._tableau_header: list = list(
+                chain.from_iterable(
+                    [
+                        _sorted_vars,
+                        # TODO: use a custom type for variable ids to differentiate slack variables etc
+                        [f"s_{i}" for i in range(len(inequalities))],
+                        ["I", "RHS"]
+                    ]
+                )
+            )
+
             for inequality_idx, inequality in enumerate(inequalities):
                 # cast to list to immediately evaluate the iterable
                 _row = list(
@@ -265,7 +277,7 @@ class Tableau():
                             # this function returns an iterable that returns
                             # all the left side of the tableau, with any
                             # variables that dont exist being set to zero
-                            inequality.tableau_left_padded(_vars),
+                            inequality.tableau_left_padded(_sorted_vars),
                             # filler zeroes for slack variables
                             repeat(Fraction(0), inequality_idx),
                             # for slack variable (do not include for the
