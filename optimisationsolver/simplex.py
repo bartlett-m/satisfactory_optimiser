@@ -122,6 +122,14 @@ class TableauRow():
     def index(self, item):
         return self._row.index(item)
 
+    def _get_rhs(self) -> Fraction:
+        return self._row[-1]
+
+    rhs = property(
+        fget=_get_rhs,
+        doc="The value of the right-hand-side of this row"
+    )
+
 
 # for backwards compatibility with old debug code
 _temp_debug_tableau = [
@@ -137,6 +145,7 @@ _temp_debug_tableau = [
 
 
 class Variable():
+    # TODO: this would probably make way more sense as a named tuple?
     def __init__(
         self,
         id,
@@ -384,3 +393,44 @@ class Tableau():
                 self.pivot()
         except SimplexAlgorithmDoneException:
             return  # done now
+
+    def _get_variable_value(self, column: int) -> Fraction:
+        # if the variable is basic, its column has all zeroes except for a
+        # single row with a value of one.  the right hand side of the row with
+        # a one is the value of this basic variable.  otherwise, the variable
+        # is non-basic and always has a value of zero.
+
+        # note that this will run on the right-hand-side without complaint,
+        # even though that operation doesnt make sense from a practical
+        # standpoint
+        possible_value = None
+        for row in self._tableau:
+            if (
+                (
+                    not (
+                        row._row[column] == 0
+                        or
+                        row._row[column] == 1
+                    )
+                )
+                or
+                (
+                    row._row[column] == 1
+                    and
+                    possible_value is not None
+                )
+            ):
+                return Fraction(0)
+            elif row._row[column] == 1:
+                possible_value = row.rhs
+        return (Fraction(0) if possible_value is None else possible_value)
+
+    def get_variable_values(self) -> list:  # TODO: more specific type hint
+        _ret: list = [
+            (var_id, self._get_variable_value(idx))
+            for idx, var_id
+            # remember to strip out right-hand-side!
+            in enumerate(self._tableau_header[:-1])
+        ]
+
+        return _ret
