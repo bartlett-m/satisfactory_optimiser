@@ -1,6 +1,7 @@
 import unittest
 from fractions import Fraction
 from optimisationsolver import simplex
+from utils.variabletypetags import VariableType, AnonymousTypeTag, NamedTypeTag
 
 
 class TestTableau(unittest.TestCase):
@@ -80,10 +81,13 @@ class TestTableau(unittest.TestCase):
             ]
         )
 
-    def test_temp(self):
+    def test_solve_and_report_values_0(self):
         # actually just me doing further maths discrete classwork
         # but i found some bugs in my new constructor so it was useful
-        print("test_temp")
+        # i was then able to turn this into an actual test using the new
+        # constructor and value reporting function
+        # print("test_temp")
+
         t = simplex.Tableau(
             inequalities=[
                 simplex.Inequality([simplex.Variable("x", 5), simplex.Variable("y", 7)], 35),
@@ -98,5 +102,34 @@ class TestTableau(unittest.TestCase):
         # [Fraction(1, 1), Fraction(0, 1), Fraction(9, 17), Fraction(-7, 17), Fraction(0, 1), Fraction(63, 17)]
         # [Fraction(0, 1), Fraction(1, 1), Fraction(-4, 17), Fraction(5, 17), Fraction(0, 1), Fraction(40, 17)]
         # [Fraction(0, 1), Fraction(0, 1), Fraction(6, 17), Fraction(1, 17), Fraction(1, 1), Fraction(246, 17)]
-        for row in t._tableau:
-            print(row)
+
+        # print(t._get_variable_value(1))
+        # print(t.get_variable_values())
+
+        # assertCountEqual is NOT checking whether the length of the two lists
+        # is the same.
+        # it instead checks that each unique item in the list occurs the same
+        # number of times.
+        # i.e. it checks if the lists are equal as if list was an unordered
+        # datatype rather than an ordered one, which is what i want since the
+        # returned variable values would not need to be in any particular
+        # order in practice (although as of writing my api does return them in
+        # a consistent order when sortable variable identifiers are used)
+        self.assertCountEqual(
+            t.get_variable_values(),
+            [
+                (NamedTypeTag(VariableType.NORMAL, 'x'), Fraction(63, 17)),
+                (NamedTypeTag(VariableType.NORMAL, 'y'), Fraction(40, 17)),
+                (NamedTypeTag(VariableType.SLACK, 0), 0),
+                # this being out of order is to check if python ever changes
+                # the behaviour of assertCountEqual and also to show that
+                # assertCountEqual does not care about ordering
+                # as of writing, these last two lines are swapped compared to
+                # the actual order simplex returns
+                (AnonymousTypeTag(VariableType.OBJECTIVE), Fraction(246, 17)),
+                (NamedTypeTag(VariableType.SLACK, 1), 0)
+            ]
+        )
+
+        # for row in t._tableau:
+        #     print(row)
