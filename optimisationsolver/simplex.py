@@ -275,7 +275,8 @@ class Tableau():
                         ),
                         map(
                             lambda i: NamedTypeTag(VariableType.SLACK, i),
-                            range(len(inequalities))
+                            # remember to strip out the objective row!
+                            range(len(inequalities) - 1)
                         ),
                         map(
                             lambda t: AnonymousTypeTag(t),
