@@ -66,18 +66,39 @@ class TestTableau(unittest.TestCase):
             ]
         )
 
-    def test_new_constructor_temp(self):
-        # TODO: the print statements within the new constructor have been
-        # removed.  replace them with a proper check here.
-        # also TODO: make the tableau store a header with the variable names
-        # so equality can be checked properly.  possibly also use this header
-        # so the variable names dont have to be sorted in the constructor.
+    def test_constructor_does_not_error_1(self):
+        _ = simplex.Tableau(
+            inequalities=[
+                simplex.Inequality([simplex.Variable("x", 1), simplex.Variable("y", 1), simplex.Variable("z", 1)], 10),
+                simplex.Inequality([simplex.Variable("x", 2), simplex.Variable("y", -1)], 0),
+                simplex.Inequality([simplex.Variable("x", 1), simplex.Variable("y", 3), simplex.Variable("z", -1)], -6),
+                simplex.ObjectiveEquation([simplex.Variable("x", -5), simplex.Variable("y", 3), simplex.Variable("z", -4)], 0, 1)
+            ]
+        )
+
+    def test_initialise_values_1(self):
+        # TODO: figure out if theres a way to automatically skip this test if
+        # test_constructor_does_not_error_1 fails (since this test is a
+        # superset of that test)
         t = simplex.Tableau(
             inequalities=[
                 simplex.Inequality([simplex.Variable("x", 1), simplex.Variable("y", 1), simplex.Variable("z", 1)], 10),
                 simplex.Inequality([simplex.Variable("x", 2), simplex.Variable("y", -1)], 0),
                 simplex.Inequality([simplex.Variable("x", 1), simplex.Variable("y", 3), simplex.Variable("z", -1)], -6),
                 simplex.ObjectiveEquation([simplex.Variable("x", -5), simplex.Variable("y", 3), simplex.Variable("z", -4)], 0, 1)
+            ]
+        )
+        # see test_solve_and_report_values_0 comments
+        self.assertCountEqual(
+            t.get_variable_values(),
+            [
+                (NamedTypeTag(VariableType.NORMAL, 'x'), 0),
+                (NamedTypeTag(VariableType.NORMAL, 'y'), 0),
+                (NamedTypeTag(VariableType.NORMAL, 'z'), 0),
+                (NamedTypeTag(VariableType.SLACK, 0), 10),
+                (NamedTypeTag(VariableType.SLACK, 1), 0),
+                (NamedTypeTag(VariableType.SLACK, 2), -6),
+                (AnonymousTypeTag(VariableType.OBJECTIVE), 0),
             ]
         )
 
