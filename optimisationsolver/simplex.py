@@ -4,6 +4,7 @@ from fractions import Fraction
 from typing import Iterable
 from itertools import filterfalse, repeat, chain
 from utils.exceptions import AlgorithmDoneException
+from utils.variabletypetags import VariableType, NamedTypeTag, AnonymousTypeTag
 
 toplevel_logger = logging.getLogger(__name__)
 
@@ -265,13 +266,21 @@ class Tableau():
             # chances
             _sorted_vars.sort()
 
-            self._tableau_header: list = list(
+            self._tableau_header: list[AnonymousTypeTag] = list(
                 chain.from_iterable(
                     [
-                        _sorted_vars,
-                        # TODO: use a custom type for variable ids to differentiate slack variables etc
-                        [f"s_{i}" for i in range(len(inequalities))],
-                        ["I", "RHS"]
+                        map(
+                            lambda v: NamedTypeTag(VariableType.NORMAL, v),
+                            _sorted_vars
+                        ),
+                        map(
+                            lambda i: NamedTypeTag(VariableType.SLACK, i),
+                            range(len(inequalities))
+                        ),
+                        map(
+                            lambda t: AnonymousTypeTag(t),
+                            [VariableType.OBJECTIVE, VariableType.CONSTANT]
+                        )
                     ]
                 )
             )

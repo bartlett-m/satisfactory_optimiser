@@ -13,6 +13,32 @@ class VariableType(Enum):
     OBJECTIVE = 4
 
 
+class AnonymousTypeTag():
+    def __init__(
+        self,
+        type: VariableType,
+    ):
+        # needed so that the typing of the tableau header is sensible
+        self.type = type
+
+    def __repr__(self) -> str:
+        return self.type.__repr__()
+
+
+class NamedTypeTag(AnonymousTypeTag):
+    def __init__(
+        self,
+        type: VariableType,
+        name
+    ):
+        super(NamedTypeTag, self).__init__(type)
+        self.name = name
+
+    def __repr__(self) -> str:
+        return super(NamedTypeTag, self).__repr__() + f" : {self.name}"
+
+
+# TODO: this probably wont be useful
 class InequalityType(IntFlag):
     # the base flags
     EQUAL = 2**0
