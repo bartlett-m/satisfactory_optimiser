@@ -6,6 +6,9 @@ from itertools import filterfalse, repeat, chain
 from utils.exceptions import AlgorithmDoneException
 from utils.variabletypetags import VariableType, NamedTypeTag, AnonymousTypeTag
 
+# temp to find which tests i need to replace
+import warnings
+
 toplevel_logger = logging.getLogger(__name__)
 
 
@@ -237,6 +240,7 @@ class Tableau():
         inequalities: list[Inequality] = [],
     ) -> None:
         if inequalities == []:
+            warnings.warn("debug constructor is deprecated", DeprecationWarning)
             # TODO: this temporary jank needs to be replaced
             # with an actual constructor.
             self._tableau = tableau
