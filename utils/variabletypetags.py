@@ -24,6 +24,9 @@ class AnonymousTypeTag():
     def __repr__(self) -> str:
         return self.type.__repr__()
 
+    def __eq__(self, other: type["AnonymousTypeTag"]) -> bool:
+        return isinstance(other, AnonymousTypeTag) and self.type == other.type
+
 
 class NamedTypeTag(AnonymousTypeTag):
     def __init__(
@@ -36,6 +39,13 @@ class NamedTypeTag(AnonymousTypeTag):
 
     def __repr__(self) -> str:
         return super(NamedTypeTag, self).__repr__() + f" : {self.name}"
+
+    def __eq__(self, other: type["NamedTypeTag"]) -> bool:
+        return (
+            isinstance(other, NamedTypeTag)
+            and self.type == other.type
+            and self.name == other.name
+        )
 
 
 # TODO: this probably wont be useful
