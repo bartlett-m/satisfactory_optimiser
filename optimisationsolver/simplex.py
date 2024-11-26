@@ -6,9 +6,6 @@ from itertools import filterfalse, repeat, chain
 from utils.exceptions import AlgorithmDoneException
 from utils.variabletypetags import VariableType, NamedTypeTag, AnonymousTypeTag
 
-# temp to find which tests i need to replace
-import warnings
-
 toplevel_logger = logging.getLogger(__name__)
 
 
@@ -236,100 +233,88 @@ class ObjectiveEquation(Inequality):
 class Tableau():
     def __init__(
         self,
-        tableau: list[TableauRow] = _temp_debug_tableau,
-        inequalities: list[Inequality] = [],
+        inequalities: list[Inequality],
     ) -> None:
-        if inequalities == []:
-            warnings.warn("debug constructor is deprecated", DeprecationWarning)
-            # TODO: this temporary jank needs to be replaced
-            # with an actual constructor.
-            self._tableau = tableau
-            # legacy constructor used in some tests.
-            # it is entirely ignored if the inequalities argument is set.
-            # to do so, the tableau argument can be left as the default
-            # and the inequalities argument is set by its keyword.
-            # this legacy parameter will eventually be removed
-        else:
-            self._tableau: list[list[Fraction]] = []
-            _vars = set()
-            for inequality in inequalities:
-                for variable_id in inequality._lhs:
-                    # inequality._lhs is the internal dictionary
-                    # representation of the inequality.
-                    # since we only care about the keys (variable ids) it is
-                    # quicker to just iterate through the keys directly,
-                    # since this does not involve initialising new Variable
-                    # objects.
-                    _vars.add(variable_id)
+        self._tableau: list[list[Fraction]] = []
+        _vars = set()
+        for inequality in inequalities:
+            for variable_id in inequality._lhs:
+                # inequality._lhs is the internal dictionary
+                # representation of the inequality.
+                # since we only care about the keys (variable ids) it is
+                # quicker to just iterate through the keys directly,
+                # since this does not involve initialising new Variable
+                # objects.
+                _vars.add(variable_id)
 
-            _sorted_vars = list(_vars)
-            # to prevent fun bugs when the order of variables isnt consistent
-            # throughout the tableau
-            # python sets are sorted from my experience, but considering how long
-            # i have spent debugging this file in particular i dont want to take
-            # chances
-            _sorted_vars.sort()
+        _sorted_vars = list(_vars)
+        # to prevent fun bugs when the order of variables isnt consistent
+        # throughout the tableau
+        # python sets are sorted from my experience, but considering how long
+        # i have spent debugging this file in particular i dont want to take
+        # chances
+        _sorted_vars.sort()
 
-            self._tableau_header: list[AnonymousTypeTag] = list(
+        self._tableau_header: list[AnonymousTypeTag] = list(
+            chain.from_iterable(
+                [
+                    map(
+                        lambda v: NamedTypeTag(VariableType.NORMAL, v),
+                        _sorted_vars
+                    ),
+                    map(
+                        lambda i: NamedTypeTag(VariableType.SLACK, i),
+                        # remember to strip out the objective row!
+                        range(len(inequalities) - 1)
+                    ),
+                    map(
+                        lambda t: AnonymousTypeTag(t),
+                        [VariableType.OBJECTIVE, VariableType.CONSTANT]
+                    )
+                ]
+            )
+        )
+
+        for inequality_idx, inequality in enumerate(inequalities):
+            # cast to list to immediately evaluate the iterable
+            _row = list(
+                # itertools chain to stitch various iterables for
+                # different parts of the tableau together
                 chain.from_iterable(
                     [
-                        map(
-                            lambda v: NamedTypeTag(VariableType.NORMAL, v),
-                            _sorted_vars
+                        # this function returns an iterable that returns
+                        # all the left side of the tableau, with any
+                        # variables that dont exist being set to zero
+                        inequality.tableau_left_padded(_sorted_vars),
+                        # filler zeroes for slack variables
+                        repeat(Fraction(0), inequality_idx),
+                        # for slack variable (do not include for the
+                        # objective row)
+                        (
+                            []
+                            if issubclass(
+                                type(inequality),
+                                ObjectiveEquation
+                            )
+                            else [Fraction(1)]
                         ),
-                        map(
-                            lambda i: NamedTypeTag(VariableType.SLACK, i),
-                            # remember to strip out the objective row!
-                            range(len(inequalities) - 1)
+                        # remaining zeroes for slack variables
+                        # (max ensures that there isnt -1 or -2 repeats
+                        # for the objective row)
+                        repeat(
+                            Fraction(0),
+                            max([
+                                (len(inequalities) - (inequality_idx + 2)),
+                                0
+                            ])
                         ),
-                        map(
-                            lambda t: AnonymousTypeTag(t),
-                            [VariableType.OBJECTIVE, VariableType.CONSTANT]
-                        )
+                        # objective coefficient and right-hand-side of the
+                        # inequality
+                        [inequality.objective_coefficient, inequality.rhs]
                     ]
                 )
             )
-
-            for inequality_idx, inequality in enumerate(inequalities):
-                # cast to list to immediately evaluate the iterable
-                _row = list(
-                    # itertools chain to stitch various iterables for
-                    # different parts of the tableau together
-                    chain.from_iterable(
-                        [
-                            # this function returns an iterable that returns
-                            # all the left side of the tableau, with any
-                            # variables that dont exist being set to zero
-                            inequality.tableau_left_padded(_sorted_vars),
-                            # filler zeroes for slack variables
-                            repeat(Fraction(0), inequality_idx),
-                            # for slack variable (do not include for the
-                            # objective row)
-                            (
-                                []
-                                if issubclass(
-                                    type(inequality),
-                                    ObjectiveEquation
-                                )
-                                else [Fraction(1)]
-                            ),
-                            # remaining zeroes for slack variables
-                            # (max ensures that there isnt -1 or -2 repeats
-                            # for the objective row)
-                            repeat(
-                                Fraction(0),
-                                max([
-                                    (len(inequalities) - (inequality_idx + 2)),
-                                    0
-                                ])
-                            ),
-                            # objective coefficient and right-hand-side of the
-                            # inequality
-                            [inequality.objective_coefficient, inequality.rhs]
-                        ]
-                    )
-                )
-                self._tableau.append(TableauRow(_row))
+            self._tableau.append(TableauRow(_row))
 
     def _get_pivot_column(self) -> int:
         # # get the objective row and find the value of the most negative entry
