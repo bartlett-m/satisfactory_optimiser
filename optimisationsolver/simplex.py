@@ -215,8 +215,8 @@ class ObjectiveEquation(Inequality):
     def __init__(
         self,
         lhs: Iterable[Variable],
-        rhs: Rational,
-        objective_coefficient: Rational
+        rhs: Rational = Fraction(0),
+        objective_coefficient: Rational = Fraction(1)
     ):
         super().__init__(lhs, rhs)
         self._objective_coefficient = objective_coefficient
