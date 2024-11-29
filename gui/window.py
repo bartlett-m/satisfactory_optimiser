@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QTabWidget, QMainWindow, QWidget, QLabel, \
     QScrollArea, QVBoxLayout, QFormLayout, QPushButton
 # TODO: prepend a . to the first item after finished testing
 from item import Item
+from targets_widget import TargetsWidget, Target
 
 
 class MainWindow(QMainWindow):
@@ -17,6 +18,10 @@ class MainWindow(QMainWindow):
         self.solution_layout = QVBoxLayout()
 
         self.problem_layout.addRow('Targets', QPushButton("Add"))
+        self.targets_widget = TargetsWidget()
+        self.targets_widget.add_target(Target())
+        self.targets_widget.add_target(Target())
+        self.problem_layout.addRow(self.targets_widget)
 
         self.problem_layout.addRow('Resource Availability', QPushButton("Add"))
 
