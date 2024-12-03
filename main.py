@@ -29,6 +29,7 @@ def get_default_satisfactory_docs_path() -> pathlib.Path | None:
     match sys.platform:
         case 'emscripten' | 'wasi':
             # webassembly
+            # probably wont work well, if at all
             return None
         case 'android':
             # i think qt for python lets you build android apps but i dont
@@ -62,7 +63,7 @@ def get_default_satisfactory_docs_path() -> pathlib.Path | None:
             return None
         case 'aix':
             # likely would work decently if the docs file was provided
-            # but i doubt steam supports this
+            # but i doubt steam supports this platform
             return None
         case _:
             # default pattern i.e. OS not in python documentation as of writing
@@ -216,6 +217,7 @@ if __name__ == "__main__":
             production'
     )
 
+    # path to docs file
     # see
     # https://dusty.phillips.codes/2018/08/13/python-loading-pathlib-paths-with-argparse/
     parser.add_argument(
@@ -225,9 +227,55 @@ if __name__ == "__main__":
         default=get_default_satisfactory_docs_path()
     )
 
+    # log level verbosity
+    # default is equivalent to warnings and above
+    parser.add_argument(
+        '-v', '--verbose',
+        action='count',
+        default=0,
+    )
+
+    parser.add_argument(
+        '-q', '--quiet',
+        action='count',
+        default=0
+    )
+
     passed_arguments = parser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG, filename="last.log", filemode="w")
-    toplevel_logger.info("Set log configuration")
+    # parse and validate log level args
+    # dictionary key is n of verbose then n of quiet
+    _LOG_LEVELS: dict = {
+        (2, 0): logging.DEBUG,
+        (1, 0): logging.INFO,
+        (0, 0): logging.WARNING,
+        (0, 1): logging.ERROR,
+        (0, 2): logging.CRITICAL
+    }
+    _configured_log_level = logging.NOTSET
+    try:
+        _configured_log_level = _LOG_LEVELS[
+            # min() calls to maintain conventional verbosity argument
+            # behaviour (i.e. any past n will have no effect)
+            (
+                min(passed_arguments.verbose, 2),
+                min(passed_arguments.quiet, 2)
+            )
+        ]
+    except KeyError:
+        raise ValueError(
+            "Invalid log verbosity.  Cannot specify both quietness and \
+                verbosity simultaneously."
+        )
+
+    logging.basicConfig(
+        level=_configured_log_level,
+        filename="last.log",
+        filemode="w"
+    )
+    toplevel_logger.debug("Early init done (logging configured).")
+    toplevel_logger.debug(
+        "Errors should now be loggable in addition to panic/ignore"
+    )
 
     main(passed_arguments)
