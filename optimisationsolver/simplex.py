@@ -132,19 +132,6 @@ class TableauRow():
     )
 
 
-# for backwards compatibility with old debug code
-_temp_debug_tableau = [
-    TableauRow([Fraction(coef) for coef in row])
-    for row
-    in [
-        # a, b, s_1, s_2, P, RHS
-        [1, 1, 1, 0, 0, 40],
-        [4, 1, 0, 1, 0, 100],
-        [-20, -10, 0, 0, 1, 0]  # objective row
-    ]
-]
-
-
 class Variable():
     # TODO: this would probably make way more sense as a named tuple?
     def __init__(
