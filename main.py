@@ -8,6 +8,8 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QCommandLineOption, QCommandLineParser
 
+from gui.window import MainWindow
+
 from satisfactoryobjects import (
     itemhandler,
     recipehandler,
@@ -220,7 +222,7 @@ def load_docs(satisfactory_docs_absolute_path: pathlib.Path) -> None:
         nativeclasses.SatisfactoryNativeClassHandler.handle()
 
 
-def main(configured_docs_path: pathlib.Path):
+def main(configured_docs_path: pathlib.Path, qt_application: QApplication):
     logger = toplevel_logger.getChild("main")
 
     logger.info(
@@ -263,6 +265,14 @@ def main(configured_docs_path: pathlib.Path):
         ]
     )
 
+    # gui init
+
+    main_window = MainWindow()
+    main_window.show()
+
+    # start up qt application event loop
+    qt_application.exec()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -281,4 +291,4 @@ if __name__ == "__main__":
         "Errors should now be loggable in addition to panic/ignore"
     )
 
-    main(configured_docs_path)
+    main(configured_docs_path, app)

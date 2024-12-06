@@ -1,9 +1,16 @@
 # from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTabWidget, QMainWindow, QWidget, QLabel, \
-    QScrollArea, QVBoxLayout, QFormLayout, QPushButton
-# TODO: prepend a . to the first item after finished testing
-from item import Item
-from targets_widget import TargetsWidget, Target
+from PySide6.QtWidgets import (
+    QTabWidget,
+    QMainWindow,
+    QWidget,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QFormLayout,
+    QPushButton
+)
+from .item import Item
+from .targets_widget import TargetsWidget, Target
 
 
 class MainWindow(QMainWindow):
@@ -50,13 +57,3 @@ class MainWindow(QMainWindow):
         # self.tabs.setTabEnabled(1, False)  # like this we can disable a tab
 
         self.setCentralWidget(self.tabs)
-
-
-# testing
-if __name__ == "__main__":
-    import sys
-    from PySide6.QtWidgets import QApplication
-    app = QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
-    app.exec()
