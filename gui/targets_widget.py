@@ -9,12 +9,19 @@ from PySide6.QtWidgets import (
 )
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
+# CAUTION: this better have been initialised by the time Target.__init__()
+# starts getting called or things could get very broken
+from satisfactoryobjects.recipehandler import recipes
+
 
 class Target():
     # CAUTION: not a real widget - instead a data structure that autogenerates
     # a few widgets
     def __init__(self):
         self.combo_box = QComboBox()
+        for recipe_id, recipe in recipes.items():
+            self.combo_box.addItem(recipe.user_facing_name, recipe_id)
+        # TODO: also add some special targets for power consumption etc
         self._value = QDoubleSpinBox()
         self._value.setRange(0, float("inf"))
         self._value.setDecimals(
