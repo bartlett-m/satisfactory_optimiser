@@ -4,6 +4,11 @@ import argparse
 import pathlib
 import sys
 
+# PySide6 dependency here to parse arguments
+# (because argparse has too many limitations to use alongside)
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QCommandLineOption, QCommandLineParser
+
 from satisfactoryobjects import (
     itemhandler,
     recipehandler,
@@ -11,6 +16,14 @@ from satisfactoryobjects import (
     nativeclasses,
     recipelookup
 )
+
+VALID_LOG_VERBOSITY_LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "error": logging.ERROR,
+    "crit": logging.CRITICAL
+}
 
 toplevel_logger = logging.getLogger(__name__)
 
@@ -68,6 +81,49 @@ def get_default_satisfactory_docs_path() -> pathlib.Path | None:
         case _:
             # default pattern i.e. OS not in python documentation as of writing
             return None
+
+
+def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
+    # code based off of examples at
+    # https://www.pythonguis.com/faq/command-line-arguments-pyqt6/
+    parser = QCommandLineParser()
+    parser.addHelpOption()
+    parser.addVersionOption()
+
+    suggested_default_path = get_default_satisfactory_docs_path()
+
+    file_path_option = QCommandLineOption(
+        "p",
+        "Path to Docs.json",
+        "path"
+    )
+
+    if suggested_default_path is not None:
+        file_path_option.setDefaultValue(str(suggested_default_path))
+    parser.addOption(file_path_option)
+
+    verbosity_level_option = QCommandLineOption(
+        "l",
+        f"Log verbosity level (one of {', '.join([lvl for lvl in VALID_LOG_VERBOSITY_LEVELS])})",
+        "verbosity",
+        "warn"
+    )
+    parser.addOption(verbosity_level_option)
+
+    parser.process(app)
+
+    used_path = parser.value(file_path_option)
+    raw_verbosity_level = parser.value(verbosity_level_option)
+    verbosity_level = logging.NOTSET
+
+    if suggested_default_path is None and not used_path:
+        raise ValueError("Path could not be autodetermined and was not specified!")
+    try:
+        verbosity_level = VALID_LOG_VERBOSITY_LEVELS[raw_verbosity_level.lower()]
+    except KeyError:
+        raise ValueError("Invalid log verbosity level!")
+
+    return (pathlib.Path(used_path).expanduser().resolve(), verbosity_level)
 
 
 def register_handlers() -> None:
@@ -159,23 +215,16 @@ def load_docs(satisfactory_docs_absolute_path: pathlib.Path) -> None:
         nativeclasses.SatisfactoryNativeClassHandler.handle()
 
 
-def main(arguments: argparse.Namespace):
+def main(configured_docs_path: pathlib.Path):
     logger = toplevel_logger.getChild("main")
 
-    if arguments.docs_file is None:
-        logger.critical(
-            'Satisfactory docs path could not be autodetermined and was not \
-                provided!'
-        )
-        # see /usr/include/sysexits.h on your linux system for more info
-        sys.exit(64)
     logger.info(
-        f'Satisfactory docs path to use is {arguments.docs_file}'
+        f'Satisfactory docs path to use is {configured_docs_path}'
     )
 
     register_handlers()
 
-    load_docs(arguments.docs_file)
+    load_docs(configured_docs_path)
 
     print(
         [
@@ -211,65 +260,14 @@ def main(arguments: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog='Satisfactory Optimiser',
-        description='Linear programming solver for Satisfactory item \
-            production'
-    )
+    app = QApplication(sys.argv)
+    app.setApplicationName("Satisfactory Optimiser")
+    app.setApplicationVersion("1.0.0")
 
-    # path to docs file
-    # see
-    # https://dusty.phillips.codes/2018/08/13/python-loading-pathlib-paths-with-argparse/
-    parser.add_argument(
-        '-d', '--docs-file',
-        action='store',
-        type=pathlib.Path,
-        default=get_default_satisfactory_docs_path()
-    )
-
-    # log level verbosity
-    # default is equivalent to warnings and above
-    parser.add_argument(
-        '-v', '--verbose',
-        action='count',
-        default=0,
-    )
-
-    parser.add_argument(
-        '-q', '--quiet',
-        action='count',
-        default=0
-    )
-
-    passed_arguments = parser.parse_args()
-
-    # parse and validate log level args
-    # dictionary key is n of verbose then n of quiet
-    _LOG_LEVELS: dict = {
-        (2, 0): logging.DEBUG,
-        (1, 0): logging.INFO,
-        (0, 0): logging.WARNING,
-        (0, 1): logging.ERROR,
-        (0, 2): logging.CRITICAL
-    }
-    _configured_log_level = logging.NOTSET
-    try:
-        _configured_log_level = _LOG_LEVELS[
-            # min() calls to maintain conventional verbosity argument
-            # behaviour (i.e. any past n will have no effect)
-            (
-                min(passed_arguments.verbose, 2),
-                min(passed_arguments.quiet, 2)
-            )
-        ]
-    except KeyError:
-        raise ValueError(
-            "Invalid log verbosity.  Cannot specify both quietness and \
-                verbosity simultaneously."
-        )
+    configured_docs_path, configured_log_level = parse_arguments(app)
 
     logging.basicConfig(
-        level=_configured_log_level,
+        level=configured_log_level,
         filename="last.log",
         filemode="w"
     )
@@ -278,4 +276,4 @@ if __name__ == "__main__":
         "Errors should now be loggable in addition to panic/ignore"
     )
 
-    main(passed_arguments)
+    main(configured_docs_path)
