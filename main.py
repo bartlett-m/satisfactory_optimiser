@@ -1,6 +1,5 @@
 import json
 import logging
-import argparse
 import pathlib
 import sys
 
@@ -104,7 +103,9 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
 
     verbosity_level_option = QCommandLineOption(
         "l",
-        f"Log verbosity level (one of {', '.join([lvl for lvl in VALID_LOG_VERBOSITY_LEVELS])})",
+        f"Log verbosity level (one of {', '.join(
+            [lvl for lvl in VALID_LOG_VERBOSITY_LEVELS]
+        )})",
         "verbosity",
         "warn"
     )
@@ -117,9 +118,13 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
     verbosity_level = logging.NOTSET
 
     if suggested_default_path is None and not used_path:
-        raise ValueError("Path could not be autodetermined and was not specified!")
+        raise ValueError(
+            "Path could not be autodetermined and was not specified!"
+        )
     try:
-        verbosity_level = VALID_LOG_VERBOSITY_LEVELS[raw_verbosity_level.lower()]
+        verbosity_level = VALID_LOG_VERBOSITY_LEVELS[
+            raw_verbosity_level.lower()
+        ]
     except KeyError:
         raise ValueError("Invalid log verbosity level!")
 
