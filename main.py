@@ -222,7 +222,10 @@ def load_docs(satisfactory_docs_absolute_path: pathlib.Path) -> None:
         nativeclasses.SatisfactoryNativeClassHandler.handle()
 
 
-def main(configured_docs_path: pathlib.Path, qt_application: QApplication):
+def main(
+    configured_docs_path: pathlib.Path,
+    qt_application: QApplication
+) -> int:
     logger = toplevel_logger.getChild("main")
 
     logger.info(
@@ -270,8 +273,8 @@ def main(configured_docs_path: pathlib.Path, qt_application: QApplication):
     main_window = MainWindow()
     main_window.show()
 
-    # start up qt application event loop
-    qt_application.exec()
+    # start up qt application event loop and return its return code
+    return qt_application.exec()
 
 
 if __name__ == "__main__":
@@ -291,4 +294,7 @@ if __name__ == "__main__":
         "Errors should now be loggable in addition to panic/ignore"
     )
 
-    main(configured_docs_path, app)
+    # call main program, and exit with the return code it provides
+    sys.exit(
+        main(configured_docs_path, app)
+    )
