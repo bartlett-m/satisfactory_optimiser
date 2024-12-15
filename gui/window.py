@@ -23,10 +23,10 @@ class MainWindow(QMainWindow):
         self.problem_layout = QFormLayout()
         self.solution_layout = QVBoxLayout()
 
-        self.problem_layout.addRow('Targets', QPushButton("Add"))
+        add_target_button = QPushButton("Add")
+        add_target_button.clicked.connect(self.add_target)
+        self.problem_layout.addRow('Targets', add_target_button)
         self.targets_widget = TargetsWidget()
-        self.targets_widget.add_target(Target())
-        self.targets_widget.add_target(Target())
         self.problem_layout.addRow(self.targets_widget)
 
         self.problem_layout.addRow('Resource Availability', QPushButton("Add"))
@@ -56,3 +56,6 @@ class MainWindow(QMainWindow):
         # self.tabs.setTabEnabled(1, False)  # like this we can disable a tab
 
         self.setCentralWidget(self.tabs)
+
+    def add_target(self):
+        self.targets_widget.add_target(Target())
