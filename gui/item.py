@@ -2,7 +2,7 @@
 from numbers import Rational
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QLabel, QFrame
+from PySide6.QtWidgets import QGridLayout, QLabel, QFrame, QSizePolicy
 
 
 class Item(QFrame):
@@ -39,3 +39,5 @@ class Item(QFrame):
         # spoiler: this looks hard, probably remove the placeholder space
 
         self.setLayout(layout)
+
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
