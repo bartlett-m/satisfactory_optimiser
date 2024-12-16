@@ -43,8 +43,7 @@ class TargetsWidget(QWidget):
     def __init__(self, *args, **kwargs) -> None:
         super(TargetsWidget, self).__init__(*args, **kwargs)
 
-        self.layout_ = QFormLayout()
-        self.setLayout(self.layout_)
+        self.layout_ = QFormLayout(self)
 
     def add_target(self, target: Target):
         self.layout_.addRow(target.combo_box, target.right_side_group)
