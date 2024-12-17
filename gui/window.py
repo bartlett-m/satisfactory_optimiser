@@ -18,6 +18,14 @@ from PySide6.QtCore import Qt
 
 from thirdparty.flowlayout import FlowLayout
 
+# CAUTION: this better have been populated by the time Target.__init__()
+# starts getting called or it will likely break
+from satisfactoryobjects.recipehandler import recipes
+# TODO: this should probably actually be from the items
+# also TODO: maybe have some way of passing this in to the constructor instead
+# of importing it here (since this code seems like it would be useful for
+# resource availability as well)
+
 from .item import Item
 from .constraints_widget import ConstraintsWidget, Constraint
 
@@ -83,7 +91,7 @@ class MainWindow(QMainWindow):
         self.targets_widget = ConstraintsWidget()
 
         # start with one target
-        self.targets_widget.add_constraint(Constraint())
+        self.targets_widget.add_constraint(Constraint(recipes))
 
         # create the header for the production targets section
         (
@@ -108,34 +116,34 @@ class MainWindow(QMainWindow):
         # iron, caterium, copper, limestone, coal, quartz, sulfur, uranium,
         # bauxite, SAM
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )
 
         # create the header for the resource availability section
@@ -191,9 +199,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
 
     def add_target(self):
-        self.targets_widget.add_constraint(Constraint())
+        self.targets_widget.add_constraint(Constraint(recipes))
 
     def add_resource_availability_constraint(self):
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint()
+            Constraint(recipes)
         )

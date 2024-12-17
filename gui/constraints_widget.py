@@ -12,22 +12,19 @@ import functools
 
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
-# CAUTION: this better have been populated by the time Target.__init__()
-# starts getting called or it will likely break
-from satisfactoryobjects.recipehandler import recipes
-# TODO: this should probably actually be from the items
-# also TODO: maybe have some way of passing this in to the constructor instead
-# of importing it here (since this code seems like it would be useful for
-# resource availability as well)
+from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
 
 
 class Constraint():
     # CAUTION: not a real widget - instead a data structure that autogenerates
     # a few widgets
-    def __init__(self):
+    def __init__(self, dropdown_source: dict[str, BaseSatisfactoryObject]):
         self.combo_box = QComboBox()
-        for recipe_id, recipe in recipes.items():
-            self.combo_box.addItem(recipe.user_facing_name, recipe_id)
+        for game_internal_id, game_object in dropdown_source.items():
+            self.combo_box.addItem(
+                game_object.user_facing_name,
+                game_internal_id
+            )
         # TODO: also add some special targets for power production etc
         self._value = QDoubleSpinBox()
         self._value.setRange(0, float("inf"))
