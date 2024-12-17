@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QLayout
 )
 import functools
+from typing import Optional
 
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
@@ -18,13 +19,29 @@ from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
 class Constraint():
     # CAUTION: not a real widget - instead a data structure that autogenerates
     # a few widgets
-    def __init__(self, dropdown_source: dict[str, BaseSatisfactoryObject]):
+    def __init__(
+        self,
+        dropdown_source: dict[str, BaseSatisfactoryObject],
+        default: Optional[str | BaseSatisfactoryObject] = None
+    ):
         self.combo_box = QComboBox()
+        idx_of_current_append = 0
         for game_internal_id, game_object in dropdown_source.items():
             self.combo_box.addItem(
                 game_object.user_facing_name,
                 game_internal_id
             )
+            if (
+                issubclass(type(default), BaseSatisfactoryObject)
+                and
+                game_object == default
+            ) or (
+                issubclass(type(default), str)
+                and
+                game_internal_id == default
+            ):
+                self.combo_box.setCurrentIndex(idx_of_current_append)
+            idx_of_current_append += 1
         # TODO: also add some special targets for power production etc
         self._value = QDoubleSpinBox()
         self._value.setRange(0, float("inf"))

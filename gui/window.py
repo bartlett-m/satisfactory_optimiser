@@ -113,16 +113,16 @@ class MainWindow(QMainWindow):
         # iron, caterium, copper, limestone, coal, quartz, sulfur, uranium,
         # bauxite, SAM
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_OreIron_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, items["Desc_OreCopper_C"])
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, items["Desc_Stone_C"])
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_Coal_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
             Constraint(items)
