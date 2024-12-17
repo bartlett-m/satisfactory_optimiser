@@ -19,7 +19,7 @@ from PySide6.QtCore import Qt
 from thirdparty.flowlayout import FlowLayout
 
 from .item import Item
-from .targets_widget import TargetsWidget, Target
+from .constraints_widget import ConstraintsWidget, Constraint
 
 
 def make_form_subsection_header(
@@ -80,10 +80,10 @@ class MainWindow(QMainWindow):
         self.problem_form_layout = QVBoxLayout(problem_form_layout_container)
 
         # custom widget for production targets
-        self.targets_widget = TargetsWidget()
+        self.targets_widget = ConstraintsWidget()
 
         # start with one target
-        self.targets_widget.add_target(Target())
+        self.targets_widget.add_constraint(Constraint())
 
         # create the header for the production targets section
         (
@@ -99,6 +99,45 @@ class MainWindow(QMainWindow):
         # add the subsection content
         self.problem_form_layout.addWidget(self.targets_widget)
 
+        # custom widget for resource availability constraints
+        self.resource_availability_constraints_widget = ConstraintsWidget()
+
+        # start with one resource availability constraint
+        # TODO: start with constraints for all the basic resources
+        # ore nodes
+        # iron, caterium, copper, limestone, coal, quartz, sulfur, uranium,
+        # bauxite, SAM
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
+
         # create the header for the resource availability section
         (
             resource_availability_subsection_header,
@@ -107,11 +146,14 @@ class MainWindow(QMainWindow):
             'Resource Availability'
         )
         # TODO: callback
-        # add subsection header
+        # add the subsection header
         self.problem_form_layout.addLayout(
             resource_availability_subsection_header
         )
-        # TODO: subsection content
+        # add the subsection content
+        self.problem_form_layout.addWidget(
+            self.resource_availability_constraints_widget
+        )
 
         # header for the weightings widget has no add button
         # since there are few weightings
@@ -146,4 +188,4 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
 
     def add_target(self):
-        self.targets_widget.add_target(Target())
+        self.targets_widget.add_constraint(Constraint())
