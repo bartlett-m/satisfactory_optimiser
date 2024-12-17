@@ -31,7 +31,11 @@ toplevel_logger = logging.getLogger(__name__)
 
 def get_default_satisfactory_docs_path() -> pathlib.Path | None:
     # think this is the same for all satisfactory installations
-    SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/Docs.json')
+    # TODO: allow passing the locale as an argument or try and autodetermine it
+    # from the system config?  since post-1.0 it changed to have multiple
+    # versions per-locale
+    # TODO: autodetect if the old docs path is present, and if so use it
+    SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/en-GB.json')
     # also if you are reading this and have the time and it is after my nea
     # deadline and have satisfactory on eric james launcher i would appreciate
     # it if you checked where it plonked satisfactory, so i can add it as an
