@@ -116,10 +116,10 @@ class MainWindow(QMainWindow):
             Constraint(items, "Desc_OreIron_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, items["Desc_OreCopper_C"])
+            Constraint(items, "Desc_OreCopper_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, items["Desc_Stone_C"])
+            Constraint(items, "Desc_Stone_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
             Constraint(items, "Desc_Coal_C")
