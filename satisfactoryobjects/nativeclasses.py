@@ -121,7 +121,11 @@ def denamespace_satisfactory_classname(namespaced_classname: str) -> str:
         )
 
     # handle added quotes
-    if _parser_temp[1][-2:] == '"\'':
+    # TODO: this possibly has an edge case of handling a class name with
+    # quotes in it if the encapsulating quotes have already been removed, but
+    # this is so specific (and breaking from established convention) that we
+    # may as well ignore it
+    if _parser_temp[1][-2:] in ['"\'', '\'"']:
         return _parser_temp[1][:-2]
 
     return _parser_temp[1]
