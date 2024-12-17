@@ -145,6 +145,25 @@ class Recipe(BaseSatisfactoryObject):
             # specifically, excited photonic matter
             # (internally: Recipe_QuantumEnergy_C) has no ingredients
             # https://satisfactory.wiki.gg/wiki/Excited_Photonic_Matter
+            # TODO: maybe such recipes should just be skipped and handled like
+            # resource extraction i.e. they are input as already-available
+            # resources?  or should resource extraction be processable by this
+            # program so that the power consumption of it can be accounted for?
+            # this would likely cause the program to try and extract more
+            # resources than the map has or than can be conveniently utilised
+            # by the player, defeating the purpose of this program.  since
+            # excited photonic matter is not subject to an upper limit on
+            # production besides power, it doesnt have this same issue.
+            # best solution would probably be a penalty for using specific
+            # resources (probably not mapped to power directly because of node
+            # purity (especially because the average purity of nodes will vary
+            # depending on where the player is and what they have already
+            # utilised) plus the higher "overclocks" typically used on
+            # resource extractors due to the limited number of resource nodes
+            # available means that mapping directly to power would be
+            # infeasible - properly solving this would likely require some
+            # variation of integer programming and would cause the time
+            # complexity to skyrocket)
             if len(unparsed_resource) == 0:
                 toplevel_logger.debug(
                     "Got zero-length resource while parsing recipe "
