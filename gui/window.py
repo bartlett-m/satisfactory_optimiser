@@ -109,6 +109,7 @@ class MainWindow(QMainWindow):
 
         # start with one resource availability constraint
         # TODO: start with constraints for all the basic resources
+        # TODO: set these with a loop
         # ore nodes
         # iron, caterium, copper, limestone, coal, quartz, sulfur, uranium,
         # bauxite, SAM
@@ -119,29 +120,41 @@ class MainWindow(QMainWindow):
             Constraint(items, "Desc_OreCopper_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_Stone_C")
+            Constraint(items, "Desc_Stone_C")  # Limestone
         )
         self.resource_availability_constraints_widget.add_constraint(
             Constraint(items, "Desc_Coal_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_OreGold_C")  # Caterium
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_Sulfur_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_RawQuartz_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_OreBauxite_C")
         )
         self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
+            Constraint(items, "Desc_OreUranium_C")
         )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items)
-        )
+        try:
+            self.resource_availability_constraints_widget.add_constraint(
+                # SAM (previously SAM ore)
+                # Although present before 1.0, it doesnt seem to appear in
+                # docs.json before then.  Since it wasnt possible to automate
+                # at that time (nodes would run out until save reload) and no
+                # use was yet implemented, it is more sensible to just ignore
+                # it.
+                # try-except with a lookup from the actual items dictionary to
+                # detect if the docs file is pre or post 1.0
+                Constraint(items, items["Desc_SAM_C"])
+            )
+        except KeyError:
+            # pre 1.0 docs file, no SAM ore loaded
+            pass
 
         # create the header for the resource availability section
         (
