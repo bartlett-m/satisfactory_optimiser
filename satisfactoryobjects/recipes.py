@@ -141,6 +141,16 @@ class Recipe(BaseSatisfactoryObject):
                                   # strip remaining brackets
                                   .split("),(")
                                   ):
+            # this is for a SINGLE case in version 1.0
+            # specifically, excited photonic matter
+            # (internally: Recipe_QuantumEnergy_C) has no ingredients
+            # https://satisfactory.wiki.gg/wiki/Excited_Photonic_Matter
+            if len(unparsed_resource) == 0:
+                toplevel_logger.debug(
+                    "Got zero-length resource while parsing recipe "
+                    f"{recipe_name}"
+                )
+                continue
             unparsed_class, unparsed_amount = unparsed_resource.split(",")
             # no need to remove the ItemClass= manually since it will be
             # truncated during denamespacing anyway
