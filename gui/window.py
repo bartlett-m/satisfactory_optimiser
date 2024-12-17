@@ -145,7 +145,10 @@ class MainWindow(QMainWindow):
         ) = make_form_subsection_header(
             'Resource Availability'
         )
-        # TODO: callback
+        # setup the callback to add new constraints
+        add_resource_availability_data_button.clicked.connect(
+            self.add_resource_availability_constraint
+        )
         # add the subsection header
         self.problem_form_layout.addLayout(
             resource_availability_subsection_header
@@ -189,3 +192,8 @@ class MainWindow(QMainWindow):
 
     def add_target(self):
         self.targets_widget.add_constraint(Constraint())
+
+    def add_resource_availability_constraint(self):
+        self.resource_availability_constraints_widget.add_constraint(
+            Constraint()
+        )
