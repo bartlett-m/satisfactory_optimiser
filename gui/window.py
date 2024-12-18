@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
         self.targets_widget = ConstraintsWidget()
 
         # start with one target
-        self.targets_widget.add_constraint(Constraint(recipes))
+        self.targets_widget.add_constraint(Constraint(items))
 
         # create the header for the production targets section
         (
@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
 
     def add_target(self):
-        self.targets_widget.add_constraint(Constraint(recipes))
+        self.targets_widget.add_constraint(Constraint(items))
 
     def add_resource_availability_constraint(self):
         self.resource_availability_constraints_widget.add_constraint(
