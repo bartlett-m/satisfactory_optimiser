@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from PySide6.QtWidgets import (
     QTabWidget,
     QMainWindow,
@@ -18,10 +20,13 @@ from PySide6.QtCore import Qt
 
 from thirdparty.flowlayout import FlowLayout
 
+from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
 # CAUTION: these better have been populated by the time Target.__init__()
 # starts getting called or it will likely break
 from satisfactoryobjects.recipehandler import recipes
 from satisfactoryobjects.itemhandler import items
+
+from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
 from .item import Item
 from .constraints_widget import ConstraintsWidget, Constraint
@@ -42,6 +47,16 @@ def make_form_subsection_header(
     )
     subsection_header_layout.addWidget(subsection_header_button)
     return (subsection_header_layout, subsection_header_button)
+
+
+def resource_duplicate_typing_saver(
+    unencapsulated_resources: Iterable[str]
+) -> Iterable[str]:
+    """For each string in the iterable, prepend Desc_ and append _C"""
+    return map(
+        lambda centre_str: f"Desc_{centre_str}_C",
+        unencapsulated_resources
+    )
 
 
 class MainWindow(QMainWindow):
@@ -109,37 +124,29 @@ class MainWindow(QMainWindow):
 
         # start with one resource availability constraint
         # TODO: start with constraints for all the basic resources
-        # TODO: set these with a loop
-        # ore nodes
+        # ore nodes present in all tested versions of the docs file
         # iron, caterium, copper, limestone, coal, quartz, sulfur, uranium,
-        # bauxite, SAM
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_OreIron_C")
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_OreCopper_C")
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_Stone_C")  # Limestone
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_Coal_C")
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_OreGold_C")  # Caterium
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_Sulfur_C")
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_RawQuartz_C")
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_OreBauxite_C")
-        )
-        self.resource_availability_constraints_widget.add_constraint(
-            Constraint(items, "Desc_OreUranium_C")
-        )
+        # bauxite
+        for resource in resource_duplicate_typing_saver(
+            [
+                "OreIron",
+                "OreCopper",
+                "Stone",  # Limestone
+                "Coal",
+                "OreGold",  # Caterium
+                "Sulfur",
+                "RawQuartz",
+                "OreBauxite",
+                "OreUranium"
+            ]
+        ):
+            # these resources require no special checks, so don't bother with
+            # the dictionary lookup
+            self.resource_availability_constraints_widget.add_constraint(
+                Constraint(items, resource)
+            )
+        # final ore node: SAM - requires special handling for version
+        # differences in the docs file
         try:
             self.resource_availability_constraints_widget.add_constraint(
                 # SAM (previously SAM ore)
@@ -155,6 +162,19 @@ class MainWindow(QMainWindow):
         except KeyError:
             # pre 1.0 docs file, no SAM ore loaded
             pass
+        # fluids
+        for resource in resource_duplicate_typing_saver(
+            [
+                "Water",
+                "LiquidOil",  # Crude oil
+                "NitrogenGas"
+            ]
+        ):
+            # again, these resources require no special checks, so don't
+            # bother with the dictionary lookup
+            self.resource_availability_constraints_widget.add_constraint(
+                Constraint(items, resource)
+            )
 
         # create the header for the resource availability section
         (
@@ -180,6 +200,27 @@ class MainWindow(QMainWindow):
         # since there are few weightings
         # FIXME: maybe use a groupbox?  would look inconsistent though
         self.problem_form_layout.addWidget(QLabel("Weightings"))
+
+        self.weightings_form = QFormLayout()
+
+        self.power_usage_spin_box = QDoubleSpinBox()
+
+        for weight_setting_spin_box in [
+            self.power_usage_spin_box
+        ]:
+            weight_setting_spin_box.setRange(
+                float("-inf"),
+                float("inf")
+            )
+            weight_setting_spin_box.setDecimals(
+                SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
+            )
+
+        self.weightings_form.addRow("Power usage", self.power_usage_spin_box)
+
+        # possible FIXME: maybe encapsulate the QFormLayout in a QWidget to
+        # get a more consistent look with the margins
+        self.problem_form_layout.addLayout(self.weightings_form)
 
         # put the layout container widget in the scroll area
         problem_form_container.setWidget(problem_form_layout_container)
