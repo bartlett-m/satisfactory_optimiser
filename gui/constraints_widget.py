@@ -22,7 +22,8 @@ class Constraint():
     def __init__(
         self,
         dropdown_source: dict[str, BaseSatisfactoryObject],
-        default: Optional[str | BaseSatisfactoryObject] = None
+        default: Optional[str | BaseSatisfactoryObject] = None,
+        default_value: float = 0.0
     ):
         self.combo_box = QComboBox()
         idx_of_current_append = 0
@@ -52,6 +53,7 @@ class Constraint():
             QSizePolicy.Policy.MinimumExpanding,
             QSizePolicy.Policy.Minimum
         )
+        self._value.setValue(default_value)
         self.del_button = QPushButton("-")
         self.del_button.setDisabled(True)
         self.right_side_layout = QHBoxLayout()
