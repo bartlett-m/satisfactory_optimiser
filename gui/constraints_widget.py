@@ -44,6 +44,12 @@ class Constraint():
                 self.combo_box.setCurrentIndex(idx_of_current_append)
             idx_of_current_append += 1
         # TODO: also add some special targets for power production etc
+        # sort the combo box alphabetically
+        self.combo_box.model().sort(0)
+        # go back to the top of the combo box if no default was already
+        # specified (since otherwise the original first item remains selected)
+        if default is None:
+            self.combo_box.setCurrentIndex(0)
         self._value = QDoubleSpinBox()
         self._value.setRange(0, float("inf"))
         self._value.setDecimals(
