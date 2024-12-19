@@ -106,3 +106,26 @@ class ConstraintsWidget(QWidget):
         if self.layout_.rowCount() == 1:
             # only one target now remains, so prevent it from being removed
             self.set_first_del_button_disabled(True)
+
+    def get_constraints(self) -> list[tuple[str, float]]:
+        '''Get the values of each constraint'''
+        # list comprehension because pyside6 doesnt let you easily iterate
+        # through a qformlayout unless you want to ignore the "label" side,
+        # which in this case contains a dropdown whose value we want
+        return [
+            (
+                # internal id of currently-selected item
+                self.layout_.itemAt(i).widget().currentData(),
+                # value of doublespinbox in right hboxlayout
+                self.layout_.itemAt(i+1).itemAt(0).widget().value()
+            )
+            for i
+            in range(
+                # start at 0
+                0,
+                # to get both left combobox and right hboxlayout
+                self.layout_.rowCount() << 1,  # multiply max by 2
+                2  # and step by 2
+                # logic in tuple construction makes sure to get both
+            )
+        ]
