@@ -23,3 +23,13 @@ def lookup_recipes(target_item: Item) -> list[Recipe]:
         )
 
     return _ret
+
+
+def lookup_production_chain(targets: list[Item]):
+    # NOT YET COMPLETE
+    for target in targets:
+        source_recipes = lookup_recipes(target)
+        for source_recipe in source_recipes:
+            print(source_recipe)
+            for dependency in source_recipe.dependencies:
+                print(dependency.item)

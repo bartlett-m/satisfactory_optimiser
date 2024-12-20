@@ -35,6 +35,12 @@ def get_default_satisfactory_docs_path() -> pathlib.Path | None:
     # from the system config?  since post-1.0 it changed to have multiple
     # versions per-locale
     # TODO: autodetect if the old docs path is present, and if so use it
+    # TODO: try a few possible different docs root paths (e.g. steam, then
+    # epic games on windows/mac, then heroic on mac/linux, then epic games via
+    # lutris on linux) - will probably not get done due to not owning the game
+    # on epic myself and not really having time to borrow a macbook to test
+    # steam on macos
+    OLD_SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/Docs.json')
     SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/en-GB.json')
     # also if you are reading this and have the time and it is after my nea
     # deadline and have satisfactory on eric james launcher i would appreciate
@@ -256,7 +262,7 @@ def main(
     )
     print(
         [
-            recipe.calcPowerFlowRate()
+            recipe.calc_power_flow_rate()
             for _, recipe
             in recipehandler.recipes.items()
         ]
@@ -271,6 +277,15 @@ def main(
             )
         ]
     )
+
+    #recipelookup.lookup_production_chain(
+    #    [itemhandler.items["Desc_Plastic_C"]]
+    #)
+
+    print()
+    print(recipehandler.recipes["Recipe_Plastic_C"].calc_resource_flow_rate())
+    print(itemhandler.items["Desc_LiquidOil_C"])
+    print(itemhandler.items["Desc_Coal_C"])
 
     # gui init
 
