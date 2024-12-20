@@ -36,5 +36,5 @@ class Item(BaseSatisfactoryObject):
             "-----\n"
             f"Known as: {self.user_facing_name}\n"
             f"Has energy value of {self.energy_value}\n"
-            f"Is {("" if self.is_fluid else "not ")} a fluid"
+            f"Is {("" if self.is_fluid else "not ")}a fluid"
         )
