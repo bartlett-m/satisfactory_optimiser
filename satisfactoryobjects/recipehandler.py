@@ -20,15 +20,15 @@ def handler(obj):
             recipes[_class["ClassName"]] = Recipe(
                 _class["ClassName"],
                 _class["mDisplayName"],
-                Recipe.parseResources(
+                Recipe.parse_resources(
                     _class["mIngredients"],
                     _class["ClassName"]
                 ),
-                Recipe.parseResources(
+                Recipe.parse_resources(
                     _class["mProduct"],
                     _class["ClassName"]
                 ),
-                Recipe.parseProducedIn(
+                Recipe.parse_produced_in(
                     _class["mProducedIn"],
                     _class["ClassName"]
                 ),

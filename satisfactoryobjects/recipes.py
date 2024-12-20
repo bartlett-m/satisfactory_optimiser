@@ -62,7 +62,7 @@ class Recipe(BaseSatisfactoryObject):
             "}"
         )
 
-    def calcResourceFlowRate(
+    def calc_resource_flow_rate(
         self,
         period: float = 60,
         calculated_direction: Direction = Direction.BIDIRECTIONAL,
@@ -100,7 +100,7 @@ class Recipe(BaseSatisfactoryObject):
                 )
         return _ret
 
-    def calcPowerFlowRate(
+    def calc_power_flow_rate(
         self,
         positive_direction: Direction = Direction.OUT,
         # every recipe seems to only have 1 registered machine
@@ -126,7 +126,7 @@ class Recipe(BaseSatisfactoryObject):
                 else 1
             )
 
-    def parseResources(
+    def parse_resources(
         unparsed_resources: str,
         recipe_name: str = "[UNKNOWN]"
     ) -> list[RecipeResource]:
@@ -197,7 +197,7 @@ class Recipe(BaseSatisfactoryObject):
             )
         return result
 
-    def parseProducedIn(
+    def parse_produced_in(
         unparsed_produced_in: str,
         recipe_name: str = "[UNKNOWN]"
     ) -> list[Machine]:
