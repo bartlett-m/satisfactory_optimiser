@@ -32,7 +32,7 @@ def handler(obj):
                     _class["mProducedIn"],
                     _class["ClassName"]
                 ),
-                _class["mManufactoringDuration"],  # [sic]
+                float(_class["mManufactoringDuration"]),  # [sic]
                 # the three recipes using this dont make it clear how
                 # its defined
                 # it could be that the factor is the range and the constant
