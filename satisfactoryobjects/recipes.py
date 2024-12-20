@@ -1,4 +1,6 @@
 import logging
+from numbers import Rational
+from fractions import Fraction
 from dataclasses import dataclass
 from .basesatisfactoryobject import BaseSatisfactoryObject
 from .items import Item
@@ -15,7 +17,7 @@ toplevel_logger = logging.getLogger(__name__)
 @dataclass
 class RecipeResource:
     item: Item
-    amount: int
+    amount: Rational
 
 
 @dataclass
@@ -186,9 +188,12 @@ class Recipe(BaseSatisfactoryObject):
                 )
                 raise ItemLookupError("Recipe references nonexistent item!")
             # remove the Amount= and convert to integer
-            # TODO: check the list of items to see if it is a fluid if any
-            # special handling is then needed for this
             parsed_amount = int(unparsed_amount[7:])
+            if item.is_fluid:
+                # see comments in items.py
+                # internal units for fluid volume are not those presented to
+                # the player
+                parsed_amount = Fraction(parsed_amount, 1000)
             result.append(
                 RecipeResource(
                     item,

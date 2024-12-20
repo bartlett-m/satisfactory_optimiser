@@ -13,9 +13,15 @@ class Item(BaseSatisfactoryObject):
         is_fluid=False
     ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
+        # internal units for fluid volume are (dm)^3 (or 1000th of m^3)
+        # whereas units displayed to the player are m^3
         # if is_fluid then energy value mEnergyValue probably needs different
         # handling
-        self.energy_value = energy_value
+        self.energy_value = (
+            energy_value * 1000  # compensate for volume units
+            if is_fluid
+            else energy_value
+        )
         self.is_fluid = is_fluid
 
         # TODO: implement anything else needed
@@ -35,6 +41,7 @@ class Item(BaseSatisfactoryObject):
             f"{self.internal_class_identifier}\n"
             "-----\n"
             f"Known as: {self.user_facing_name}\n"
-            f"Has energy value of {self.energy_value}\n"
+            f"Has energy value of {self.energy_value}MJ "
+            f"{"m^-3" if self.is_fluid else "(item)^-1"}\n"
             f"Is {("" if self.is_fluid else "not ")}a fluid"
         )
