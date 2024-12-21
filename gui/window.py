@@ -123,7 +123,6 @@ class MainWindow(QMainWindow):
         self.resource_availability_constraints_widget = ConstraintsWidget()
 
         # start with one resource availability constraint
-        # TODO: start with constraints for all the basic resources
         # ore nodes present in all tested versions of the docs file
         # iron, caterium, copper, limestone, coal, quartz, sulfur, uranium,
         # bauxite
@@ -227,7 +226,10 @@ class MainWindow(QMainWindow):
 
         # add the scroll area to the tab layout
         self.problem_layout.addWidget(problem_form_container)
+        # create the run button
         run_optimisation_button = QPushButton("Run Optimisation")
+        # and connect the clicked signal to the appropriate slot
+        run_optimisation_button.clicked.connect(self.run_optimisation)
         # add the run button outside the scroll area but within the tab layout,
         # so it is always visible
         self.problem_layout.addWidget(run_optimisation_button)
@@ -256,3 +258,13 @@ class MainWindow(QMainWindow):
         self.resource_availability_constraints_widget.add_constraint(
             Constraint(items)
         )
+
+    def run_optimisation(self):
+        # FIXME: this is a stub as the actual functionality hasnt yet been
+        # implemented
+        # currently being used to trigger debug functionality
+        test = self.targets_widget.layout_.itemAt(0).widget()
+        print(test.currentData())
+        print(test.currentText())
+        print(test.currentIndex())
+        print(self.targets_widget.get_constraints())
