@@ -117,6 +117,9 @@ class TableauRow():
     def __str__(self) -> str:
         return self._row.__str__()
 
+    def __getitem__(self, index: int) -> Fraction:
+        return self._row[index]
+
     def min(self):
         return min(self._row)
 
@@ -324,7 +327,7 @@ class Tableau():
 
     def _get_pivot_row(self, pivot_column: int) -> int:
         row_ratios: list[Fraction | None] = [
-            pivot_div(row._row[-1], row._row[pivot_column])
+            pivot_div(row[-1], row[pivot_column])
             for row
             # exclude the objective row via slicing
             in self._tableau[:-1]
@@ -348,7 +351,7 @@ class Tableau():
         pivoted_row = self._tableau[row]
         # get a copy of the pivot element, which will be used to modify the
         # pivot row
-        element = pivoted_row._row[column]
+        element = pivoted_row[column]
         # divide each entry in the pivot row by the pivot element
         # NOTE: This means that the "element" variable CANNOT be used in the
         # coming lambda function since it is now out of date!
@@ -361,7 +364,7 @@ class Tableau():
             lambda indexed_row: (
                 indexed_row[1] - (
                     pivoted_row * (
-                        indexed_row[1]._row[column] / pivoted_row._row[column]
+                        indexed_row[1][column] / pivoted_row[column]
                     )
                 )
             ),
@@ -394,20 +397,20 @@ class Tableau():
             if (
                 (
                     not (
-                        row._row[column] == 0
+                        row[column] == 0
                         or
-                        row._row[column] == 1
+                        row[column] == 1
                     )
                 )
                 or
                 (
-                    row._row[column] == 1
+                    row[column] == 1
                     and
                     possible_value is not None
                 )
             ):
                 return Fraction(0)
-            elif row._row[column] == 1:
+            elif row[column] == 1:
                 possible_value = row.rhs
         return (Fraction(0) if possible_value is None else possible_value)
 
