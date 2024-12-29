@@ -3,6 +3,29 @@ from satisfactoryobjects import nativeclasses
 from utils.suppressalllogs import SuppressAll
 
 
+class TestLogDenamespaceFailure(unittest.TestCase):
+    def setUp(self, *args, **kwargs):
+        super(TestLogDenamespaceFailure, self).setUp(
+            *args,
+            **kwargs
+        )
+        # disable logging for the module under test
+        self.__log_filter_obj = SuppressAll()
+        nativeclasses.toplevel_logger.addFilter(self.__log_filter_obj)
+
+    def tearDown(self, *args, **kwargs):
+        super(TestLogDenamespaceFailure, self).tearDown(
+            *args,
+            **kwargs
+        )
+        # re-enable logging for the module under test
+        nativeclasses.toplevel_logger.removeFilter(self.__log_filter_obj)
+
+    def test_throws_error(self):
+        with self.assertRaises(ValueError):
+            nativeclasses._log_denamespace_failure("TEST", "TEST")
+
+
 class TestDenamespaceSatisfactoryClassname(unittest.TestCase):
     def setUp(self, *args, **kwargs):
         super(TestDenamespaceSatisfactoryClassname, self).setUp(
