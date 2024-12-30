@@ -51,3 +51,15 @@ class TestItem(unittest.TestCase):
             item_under_test.energy_value,
             1000
         )
+
+    def test_item_is_hashable(self):
+        # If it is unhashable, it is impossible to use it in a set (which
+        # would require certain sections of the code to use less efficient
+        # algorithms)
+        hash(
+            items.Item(
+                "Desc_testing_item_C",
+                "Some user facing name for an item under test",
+                0
+            )
+        )
