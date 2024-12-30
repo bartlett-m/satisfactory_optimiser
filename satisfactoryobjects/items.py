@@ -45,3 +45,12 @@ class Item(BaseSatisfactoryObject):
             f"{"m^-3" if self.is_fluid else "(item)^-1"}\n"
             f"Is {("" if self.is_fluid else "not ")}a fluid"
         )
+
+    def __eq__(self, other: object) -> bool:
+        if issubclass(type(other), Item):
+            return (
+                super(Item, self).__eq__(other)
+                and self.energy_value == other.energy_value
+                and self.is_fluid == other.is_fluid
+            )
+        return False

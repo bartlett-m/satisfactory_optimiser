@@ -9,3 +9,20 @@ class BaseSatisfactoryObject:
     ) -> None:
         self.internal_class_identifier = internal_class_identifier
         self.user_facing_name = user_facing_name
+
+    def __eq__(self, other: object) -> bool:
+        if issubclass(type(other), BaseSatisfactoryObject):
+            return (
+                (
+                    self.internal_class_identifier
+                    ==
+                    other.internal_class_identifier
+                )
+                and
+                (
+                    self.user_facing_name
+                    ==
+                    other.user_facing_name
+                )
+            )
+        return False

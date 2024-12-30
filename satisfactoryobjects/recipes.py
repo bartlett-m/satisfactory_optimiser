@@ -236,3 +236,20 @@ class Recipe(BaseSatisfactoryObject):
                 "Recipe does not reference any existing machine!"
             )
         return result
+
+    def __eq__(self, other: object) -> bool:
+        if issubclass(type(other), Recipe):
+            return (
+                super(Recipe, self).__eq__(other)
+                and self.dependencies == other.dependencies
+                and self.products == other.products
+                and self.machines == other.machines
+                and self.time_ == other.time_
+                and
+                (
+                    self.__average_power_consumption
+                    ==
+                    other.__average_power_consumption
+                )
+            )
+        return False

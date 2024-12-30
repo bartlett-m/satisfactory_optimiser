@@ -29,3 +29,12 @@ class FixedPowerMachine(Machine):
     ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
         self.power_flow_rate = power_flow_rate
+
+    def __eq__(self, other: object) -> bool:
+        if issubclass(type(other), FixedPowerMachine):
+            return (
+                super(FixedPowerMachine, self).__eq__(other)
+                and
+                self.power_flow_rate == other.power_flow_rate
+            )
+        return False
