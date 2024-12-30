@@ -244,6 +244,25 @@ class Tableau():
         # i have spent debugging this file in particular i dont want to take
         # chances
         _sorted_vars.sort()
+        # Reference for the following paragraph-long comment is:
+        # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        # [accessed 2024-12-30 at 13:02]
+        # (specifically the note at the end of the documentation of __hash__)
+        # It turns out that in practice, the iteration order of sets is based
+        # on the hash values of the objects in the set.  For some datatypes,
+        # this varies between Python invocations to mitigate denial-of-service
+        # attacks.  It is implied that the iteration order would be consistent
+        # within the same invocation in most cases (based on experience, the
+        # set is likely a hash table which performs equality checks upon a
+        # collision and iterates through the underlying array) but it is not
+        # explicitly defined as such, and the case of a hash collision is
+        # undocumented and could theoretically be random (but I hypothesise
+        # that it is not, due to my theory that the underlying data structure
+        # is a hash table with presumably some form of variable-length list to
+        # handle collisions, it is likely that said list is consistent in
+        # ordering as it would be the least computationally expensive to
+        # implement it this way and would also prevent bugs introduced by
+        # programmers treating set ordering as consistent).
 
         self._tableau_header: list[AnonymousTypeTag] = list(
             chain.from_iterable(
