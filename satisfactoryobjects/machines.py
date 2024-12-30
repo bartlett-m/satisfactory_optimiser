@@ -23,6 +23,14 @@ class Machine(BaseSatisfactoryObject):
         return super(Machine, self).__eq__(other)
 
     def __hash__(self) -> int:
+        # as of all commits on 2024-12-30 before 13:45, __hash__(self)
+        # implementations on any file in the satisfactoryobjects module
+        # (including this one) were writen using the help of
+        # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        # [accessed 2024-12-30 at 13:02]
+        # (note that this impl. is just borrowing one made referencing the
+        # above source but in the parent class due to nothing being changed
+        # about this class)
         return super(Machine, self).__hash__()
 
 
@@ -46,6 +54,11 @@ class FixedPowerMachine(Machine):
         return False
 
     def __hash__(self) -> int:
+        # as of all commits on 2024-12-30 before 13:45, __hash__(self)
+        # implementations on any file in the satisfactoryobjects module
+        # (including this one) were writen using the help of
+        # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        # [accessed 2024-12-30 at 13:02]
         return (
             super().__hash__()
             ^

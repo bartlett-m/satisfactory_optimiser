@@ -56,6 +56,11 @@ class Item(BaseSatisfactoryObject):
         return False
 
     def __hash__(self) -> int:
+        # as of all commits on 2024-12-30 before 13:45, __hash__(self)
+        # implementations on any file in the satisfactoryobjects module
+        # (including this one) were writen using the help of
+        # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        # [accessed 2024-12-30 at 13:02]
         return (
             super().__hash__()
             ^
