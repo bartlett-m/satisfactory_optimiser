@@ -26,3 +26,10 @@ class BaseSatisfactoryObject:
                 )
             )
         return False
+
+    def __hash__(self) -> int:
+        return (
+            self.internal_class_identifier.__hash__()
+            ^
+            self.user_facing_name.__hash__()
+        )

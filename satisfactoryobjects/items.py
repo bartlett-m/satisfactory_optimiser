@@ -54,3 +54,12 @@ class Item(BaseSatisfactoryObject):
                 and self.is_fluid == other.is_fluid
             )
         return False
+
+    def __hash__(self) -> int:
+        return (
+            super().__hash__()
+            ^
+            self.energy_value.__hash__()
+            ^
+            self.is_fluid.__hash__()
+        )

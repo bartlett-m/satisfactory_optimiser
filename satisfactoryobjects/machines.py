@@ -19,6 +19,12 @@ class Machine(BaseSatisfactoryObject):
         # consumption is not usefully defined in recipes and is instead only
         # usefully defined in the machine.
 
+    def __eq__(self, other: object) -> bool:
+        return super(Machine, self).__eq__(other)
+
+    def __hash__(self) -> int:
+        return super(Machine, self).__hash__()
+
 
 class FixedPowerMachine(Machine):
     def __init__(
@@ -38,3 +44,10 @@ class FixedPowerMachine(Machine):
                 self.power_flow_rate == other.power_flow_rate
             )
         return False
+
+    def __hash__(self) -> int:
+        return (
+            super().__hash__()
+            ^
+            self.power_flow_rate.__hash__()
+        )

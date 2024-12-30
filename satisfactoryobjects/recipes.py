@@ -253,3 +253,7 @@ class Recipe(BaseSatisfactoryObject):
                 )
             )
         return False
+
+    # Due to the usage of lists (which are unhashable) in the Recipe class,
+    # the Recipe class is therefore unhashable and does not implement
+    # __hash__(self): -> int
