@@ -1,12 +1,12 @@
 """Enums to represent the type of variable in linear programming equations"""
 
-from enum import Enum, IntFlag
+from enum import IntEnum, IntFlag
 # imported using "as" to prevent a name conflict with the operator property of
 # the InequalityTypeEnum
 import operator as python_builtin_operator
 
 
-class VariableType(Enum):
+class VariableType(IntEnum):
     NORMAL = 1
     SLACK = 2
     CONSTANT = 3
