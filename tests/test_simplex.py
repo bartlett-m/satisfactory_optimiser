@@ -183,6 +183,16 @@ class TestTableau(unittest.TestCase):
         #     print(row)
 
     def test_solve_and_report_values_with_intermediates(self):
+        # this tests how the algorithm works (or doesnt work) when the tableau
+        # is built directly on the graph-like data structure that the
+        # docs.json parser creates, instead of preprocessing the inputs,
+        # recipes etc into a smaller number of constraints so that effectively
+        # only the penultimate recipe is directly considered (which would have
+        # been hard to debug the generation of and would have driven me insane)
+        
+        # thanks to the fact that the algorithm can process this, i can
+        # greatly simplify the problem construction code.
+
         # here we have:
         # x, y, z are available items input in the interface (we have 4 of x, 6 of y, and 2 of z)
         # f is a recipe.  it takes 3 of item b, and 1 of item c, and produces 2 of item a
@@ -213,4 +223,39 @@ class TestTableau(unittest.TestCase):
 
         t.pivot_until_done()
 
-        print(t.get_variable_values())
+        self.assertCountEqual(
+            t.get_variable_values(),
+            [
+                # actual item variables (total number of items drawn into recipes or used as output)
+                # note that the next three will show the total item flow
+                # these return nonzero values even if the slack variables are nonzero (i.e. either there is excess input or excess production as a byproduct)
+                # we have 8 of a being used/output
+                (NamedTypeTag(VariableType.NORMAL, 'a'), 8),
+                # we have 6 of b being used/output
+                (NamedTypeTag(VariableType.NORMAL, 'b'), 6),
+                # we have 2 of c being used/output
+                (NamedTypeTag(VariableType.NORMAL, 'c'), 2),
+                # we are using recipe f 2 times
+                (NamedTypeTag(VariableType.NORMAL, 'f'), 2),
+                # input variables
+                # note that the next three will show the total item draw from what is manually input
+                # these return nonzero values even if the slack variables are nonzero (i.e. there is excess input)
+                # we drew 4 of item a from our input x
+                (NamedTypeTag(VariableType.NORMAL, 'x'), 4),
+                # we drew 6 of item b from our input y
+                (NamedTypeTag(VariableType.NORMAL, 'y'), 6),
+                # we drew 2 of item c from our input z
+                (NamedTypeTag(VariableType.NORMAL, 'z'), 2),
+                # slack variables
+                (NamedTypeTag(VariableType.SLACK, 0), 0),
+                (NamedTypeTag(VariableType.SLACK, 1), 0),
+                (NamedTypeTag(VariableType.SLACK, 2), 0),
+                (NamedTypeTag(VariableType.SLACK, 3), 0),
+                (NamedTypeTag(VariableType.SLACK, 4), 0),
+                (NamedTypeTag(VariableType.SLACK, 5), 0),
+                (NamedTypeTag(VariableType.SLACK, 6), 0),
+                (NamedTypeTag(VariableType.SLACK, 7), 0),
+                # our objective was 8 (in this case, without weightings being implemented, that would mean that we have 8 of item a at the end)
+                (AnonymousTypeTag(VariableType.OBJECTIVE), 8)
+            ]
+        )
