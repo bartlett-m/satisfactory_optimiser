@@ -181,3 +181,36 @@ class TestTableau(unittest.TestCase):
 
         # for row in t._tableau:
         #     print(row)
+
+    def test_solve_and_report_values_with_intermediates(self):
+        # here we have:
+        # x, y, z are available items input in the interface (we have 4 of x, 6 of y, and 2 of z)
+        # f is a recipe.  it takes 3 of item b, and 1 of item c, and produces 2 of item a
+        # a, b, c are the items x, y, z (but including production from recipes, which in this case only affects a)
+        # we are trying to make the most a we can
+        t = simplex.Tableau(
+            [
+                # there are 4 of x (item a) available
+                simplex.Inequality([simplex.Variable('x', 1)], 4),
+                # there are 6 of y (item b) available
+                simplex.Inequality([simplex.Variable('y', 1)], 6),
+                # there are 2 of z (item c) available
+                simplex.Inequality([simplex.Variable('z', 1)], 2),
+                # item a is produced by recipe f, which makes 2 of it
+                simplex.Inequality([simplex.Variable('a', 1), simplex.Variable('x', -1), simplex.Variable('f', -2)], 0),
+                # item b has no recipes producing it.
+                simplex.Inequality([simplex.Variable('b', 1), simplex.Variable('y', -1)], 0),
+                # item c has no recipes producing it.
+                simplex.Inequality([simplex.Variable('c', 1), simplex.Variable('z', -1)], 0),
+                # 3 of item b is used in recipe f.  item b is not used in any other recipes.
+                simplex.Inequality([simplex.Variable('f', 3), simplex.Variable('b', -1)], 0),
+                # 1 of item c is used in recipe f.  item c is not used in any other recipes.
+                simplex.Inequality([simplex.Variable('f', 1), simplex.Variable('c', -1)], 0),
+                # make as much of item a as possible
+                simplex.ObjectiveEquation([simplex.Variable('a', -1)])
+            ]
+        )
+
+        t.pivot_until_done()
+
+        print(t.get_variable_values())
