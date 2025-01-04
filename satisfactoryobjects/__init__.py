@@ -8,5 +8,6 @@ __all__ = [
         "machinehandler",
         "machines",
         "lookuperrors",
-        "recipelookup"
+        "recipelookup",
+        "itemvariabletype"
     ]
