@@ -189,7 +189,7 @@ class TestTableau(unittest.TestCase):
         # recipes etc into a smaller number of constraints so that effectively
         # only the penultimate recipe is directly considered (which would have
         # been hard to debug the generation of and would have driven me insane)
-        
+
         # thanks to the fact that the algorithm can process this, i can
         # greatly simplify the problem construction code.
 
