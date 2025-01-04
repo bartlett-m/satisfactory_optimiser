@@ -309,6 +309,11 @@ class MainWindow(QMainWindow):
                 print(cons)
                 problem_constraints.append(cons)
 
+        # because i forgot to mention it in an earlier commit message:
+        # this was part of an attempt to drastically speed up the simplex
+        # algorithm, but it caused it to error out (possibly due to the
+        # filtering either failing to apply or failing to check recipes
+        # referencing items that were manually set)
         """print('start prefilter')
         start_time = time.time_ns()
         # resources that no recipe makes and we dont have a manual input of
