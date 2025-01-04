@@ -237,13 +237,24 @@ class Tableau():
                 # objects.
                 _vars.add(variable_id)
 
-        _sorted_vars = list(_vars)
         # to prevent fun bugs when the order of variables isnt consistent
         # throughout the tableau
         # python sets are sorted from my experience, but considering how long
         # i have spent debugging this file in particular i dont want to take
         # chances
-        _sorted_vars.sort()
+        _consistently_ordered_vars = list(_vars)
+        # see following comment: python sets may not always iterate
+        # consistently
+        # Because my algorithm stores a header associating table columns with
+        # their variables, I do not actually need to worry about sorting, as
+        # long as the order is consistent.  To save time, I therefore do not
+        # bother sorting the list (all the tests continue to pass, and the
+        # list keeps its particular order) but I still create a list to ensure
+        # that there is one canonical order.  Furthermore, no longer sorting
+        # the list allows for mixed types to be used as variable ids, even if
+        # they do not implement __lt__ for all the other types used for
+        # variable ids.
+
         # Reference for the following paragraph-long comment is:
         # https://docs.python.org/3/reference/datamodel.html#object.__hash__
         # [accessed 2024-12-30 at 13:02]
@@ -264,12 +275,45 @@ class Tableau():
         # implement it this way and would also prevent bugs introduced by
         # programmers treating set ordering as consistent).
 
+        # A quick test with -1 and -2 (see next comment) in an interpreter
+        # adds evidence to my hypothesis: the iteration order of the set
+        # defined as {-1, -2} is -1, -2 (when processed directly by the
+        # interpreter or by a for loop), but the iteration order of the set
+        # defined as {-2, -1} is -2, -1 (under the same conditions) - this is
+        # consistent throughout repeats, suggesting that there is indeed some
+        # kind of (linked, or otherwise) list backing it in case of collisions
+        # and that is iterated through in its order (i.e. the order that
+        # elements with a hash collision would have been added to the set).
+        # However, since there are different python interpreters to CPython, I
+        # do not rely on this behaviour in case it differs in another
+        # implementation for whatever reason (or if it is changed in a future
+        # CPython version)
+
+        # basically, this means that the set itself can be unsortable
+        # (i.e. '<' operator is not supported by all elements against all
+        # elements - either because it is not implemented at all for at least
+        # one element or because mixed types that do not support comparison
+        # with each other are present) but will be sorted e.g. for positive
+        # integers (where my experience came from) due to these having hash
+        # values equal to themselves (for my testing on small integers this
+        # was the case, and when i used this behaviour in a previous program i
+        # was only dealing with integers 0 to 5 inclusive, although
+        # interestingly, for my version of python, this is not the case for
+        # negative numbers, with -1 having a hash value of -2, although for
+        # all the other integers i have tested the rule holds true - a quick
+        # web search reveals that the reason for this inconsistency is that -1
+        # is reserved in cpython to flag errors and if objects hash to it then
+        # their hash value is internally changed to -2)
+        # Reference for why the hash value of -1 is -2 is:
+        # https://stackoverflow.com/a/10130506
+        # [accessed 2025-01-04 at 12:21]
+
         self._tableau_header: list[AnonymousTypeTag] = list(
             chain.from_iterable(
                 [
                     map(
                         lambda v: NamedTypeTag(VariableType.NORMAL, v),
-                        _sorted_vars
+                        _consistently_ordered_vars
                     ),
                     map(
                         lambda i: NamedTypeTag(VariableType.SLACK, i),
@@ -294,7 +338,9 @@ class Tableau():
                         # this function returns an iterable that returns
                         # all the left side of the tableau, with any
                         # variables that dont exist being set to zero
-                        inequality.tableau_left_padded(_sorted_vars),
+                        inequality.tableau_left_padded(
+                            _consistently_ordered_vars
+                        ),
                         # filler zeroes for slack variables
                         repeat(Fraction(0), inequality_idx),
                         # for slack variable (do not include for the
