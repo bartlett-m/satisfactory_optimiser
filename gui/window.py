@@ -1,4 +1,9 @@
 from typing import Iterable
+from fractions import Fraction
+from itertools import filterfalse
+import logging
+# to log how long pivoting takes
+import time
 
 from PySide6.QtWidgets import (
     QTabWidget,
@@ -21,15 +26,25 @@ from PySide6.QtCore import Qt
 from thirdparty.flowlayout import FlowLayout
 
 from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
+from satisfactoryobjects.itemvariabletype import ItemVariableType
+from satisfactoryobjects.lookuperrors import RecipeLookupError
 # CAUTION: these better have been populated by the time Target.__init__()
 # starts getting called or it will likely break
 from satisfactoryobjects.recipehandler import recipes
 from satisfactoryobjects.itemhandler import items
+from satisfactoryobjects.recipelookup import lookup_recipes
+
+from utils.directionenums import Direction
 
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
 from .item import Item
 from .constraints_widget import ConstraintsWidget, Constraint
+
+from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable
+
+
+toplevel_logger = logging.getLogger(__name__)
 
 
 def make_form_subsection_header(
@@ -60,6 +75,8 @@ def resource_duplicate_typing_saver(
 
 
 class MainWindow(QMainWindow):
+    logger = toplevel_logger.getChild("MainWindow")
+
     def __init__(self, *args, **kwargs) -> None:
         super(MainWindow, self).__init__(*args, **kwargs)
 
@@ -268,3 +285,157 @@ class MainWindow(QMainWindow):
         print(test.currentText())
         print(test.currentIndex())
         print(self.targets_widget.get_constraints())
+
+        for target_item, target_production_rate in self.targets_widget.get_constraints():
+            print(items[target_item])
+            print(target_production_rate)
+
+        manually_set_constraints: set[Item] = set()
+        problem_constraints: list[Inequality] = list()
+
+        # add the constraints for the input items
+        for available_resource, available_resource_rate in self.resource_availability_constraints_widget.get_constraints():
+            number_per_minute = available_resource_rate
+            if number_per_minute == 0:
+                MainWindow.logger.warning(
+                    'Constraint for item with id '
+                    f'{available_resource}'
+                    ' is set to zero!  Skipping.'
+                )
+            else:
+                resource = items[available_resource]
+                manually_set_constraints.add(resource)
+                cons = Inequality([Variable(ItemVariableType(resource, True), 1)], Fraction(number_per_minute))
+                print(cons)
+                problem_constraints.append(cons)
+
+        """print('start prefilter')
+        start_time = time.time_ns()
+        # resources that no recipe makes and we dont have a manual input of
+        unobtainable_resources: set[Item] = set()
+        infeasible_recipes: set[str] = set()
+        while True:
+            previous_unobtainable_resources = frozenset(unobtainable_resources)
+            previous_infeasible_recipes = frozenset(infeasible_recipes)
+
+            for resource in filterfalse(
+                lambda i: i in manually_set_constraints | unobtainable_resources,
+                items.values()
+            ):
+                try:
+                    producing_recipes = lookup_recipes(resource)
+                    found_feasible_recipe = False
+                    for recipe in filterfalse(
+                        lambda r: r.internal_class_identifier in infeasible_recipes,
+                        producing_recipes
+                    ):
+                        recipe_is_feasible = True
+                        for dependency in recipe.dependencies:
+                            if dependency.item in unobtainable_resources:
+                                recipe_is_feasible = False
+                                MainWindow.logger.debug(
+                                    'Recipe with id '
+                                    f'{recipe.internal_class_identifier}'
+                                    ' marked as infeasible due to using '
+                                    'unobtainable item with id '
+                                    f'{dependency.item.internal_class_identifier}'
+                                )
+                                infeasible_recipes.add(recipe.internal_class_identifier)
+                                break
+                        if recipe_is_feasible:
+                            found_feasible_recipe = True
+                    if not found_feasible_recipe:
+                        MainWindow.logger.debug(
+                            'Item with id '
+                            f'{resource.internal_class_identifier}'
+                            ' has no feasible recipes, marking as unobtainable'
+                        )
+                        unobtainable_resources.add(resource)
+                except RecipeLookupError:
+                    MainWindow.logger.debug(
+                        'No recipes produce item with id '
+                        f'{resource.internal_class_identifier}'
+                        ', marking as unobtainable'
+                    )
+                    unobtainable_resources.add(resource)
+
+            if unobtainable_resources == previous_unobtainable_resources and infeasible_recipes == previous_infeasible_recipes:
+                break
+        end_time = time.time_ns()
+        print('end prefilter')
+        print((end_time-start_time)/(10**9))"""
+
+        # add the constraints for the absolute numbers of items
+        for resource in items.values():
+            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, False), 1)]
+            # if a manual input of this resource exists, add it to the constraint
+            if resource in manually_set_constraints:
+                constraint_variables.append(Variable(ItemVariableType(resource, True), -1))
+            # add data on the recipes producing this item
+            try:
+                producing_recipes = lookup_recipes(resource)
+                for recipe in producing_recipes:
+                    for flow_data in recipe.calc_resource_flow_rate(
+                        calculated_direction=Direction.OUT,
+                        positive_direction=Direction.IN
+                    ):
+                        if flow_data.item == resource:
+                            # using recipes class identifier string instead of
+                            # the recipe object itself as recipe is unhashable
+                            constraint_variables.append(Variable(recipe.internal_class_identifier, Fraction(flow_data.amount)))
+            except RecipeLookupError:
+                MainWindow.logger.debug(
+                    'No recipes produce item with id '
+                    f'{resource.internal_class_identifier}'
+                    ', only adding data about manual input'
+                )
+
+            cons = Inequality(constraint_variables, 0)
+            problem_constraints.append(cons)
+
+        # add the constraints for the recipes
+        for resource in items.values():
+            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, False), -1)]
+            try:
+                for recipe in lookup_recipes(resource, True):
+                    for flow_data in recipe.calc_resource_flow_rate(
+                        calculated_direction=Direction.IN,
+                        positive_direction=Direction.IN
+                    ):
+                        if flow_data.item == resource:
+                            # see previous note: recipe is unhashable
+                            constraint_variables.append(Variable(recipe.internal_class_identifier, Fraction(flow_data.amount)))
+                if len(constraint_variables) == 1:
+                    MainWindow.logger.debug(
+                        'No feasible recipe consumes item with id '
+                        f'{resource.internal_class_identifier}'
+                        ', not adding usage constraint'
+                    )
+                else:
+                    problem_constraints.append(Inequality(constraint_variables, 0))
+            except RecipeLookupError:
+                MainWindow.logger.debug(
+                    'No recipes consume item with id '
+                    f'{resource.internal_class_identifier}'
+                    ', not adding usage constraint'
+                )
+
+        # add the objectives and their weights
+        # TODO: make this not be a stub
+        problem_constraints.append(ObjectiveEquation([Variable(ItemVariableType(items["Desc_IronIngot_C"], False), -1)]))
+
+        print(len(problem_constraints))
+
+        t = Tableau(
+            problem_constraints
+        )
+
+        print(t.get_variable_values())
+
+        print('start pivot')
+        start_time = time.time_ns()
+        t.pivot_until_done()
+        end_time = time.time_ns()
+        print('end pivot')
+        print((end_time-start_time)/(10**9))
+        print(t.get_variable_values())
