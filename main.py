@@ -278,9 +278,9 @@ def main(
         ]
     )
 
-    #recipelookup.lookup_production_chain(
-    #    [itemhandler.items["Desc_Plastic_C"]]
-    #)
+    # recipelookup.lookup_production_chain(
+    #     [itemhandler.items["Desc_Plastic_C"]]
+    # )
 
     print()
     print(recipehandler.recipes["Recipe_Plastic_C"].calc_resource_flow_rate())
@@ -289,7 +289,7 @@ def main(
 
     # gui init
 
-    main_window = MainWindow()
+    main_window = MainWindow(qt_application)
     main_window.show()
 
     # start up qt application event loop and return its return code

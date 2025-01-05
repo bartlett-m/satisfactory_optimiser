@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QDoubleSpinBox,
-    QGroupBox
+    QGroupBox,
+    QApplication
 )
 from PySide6.QtCore import Qt
 
@@ -77,8 +78,17 @@ def resource_duplicate_typing_saver(
 class MainWindow(QMainWindow):
     logger = toplevel_logger.getChild("MainWindow")
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        qt_application_reference: QApplication,
+        *args,
+        **kwargs
+    ) -> None:
         super(MainWindow, self).__init__(*args, **kwargs)
+
+        # save a reference to the QApplication, to allow for events to be
+        # processed during a callback (e.g. to disable sections of the UI)
+        self.qt_application_reference = qt_application_reference
 
         self.setWindowTitle("Satisfactory Optimiser")
 
@@ -252,12 +262,12 @@ class MainWindow(QMainWindow):
         self.problem_layout.addWidget(run_optimisation_button)
 
         # make a widget to hold the layout of the problem tab
-        problem_tab_content_widget = QWidget()
+        self.problem_tab_content_widget = QWidget()
         # and add the layout to it
-        problem_tab_content_widget.setLayout(self.problem_layout)
+        self.problem_tab_content_widget.setLayout(self.problem_layout)
 
         # add the tabs
-        self.tabs.addTab(problem_tab_content_widget, "Problem")
+        self.tabs.addTab(self.problem_tab_content_widget, "Problem")
         self.tabs.addTab(solution_tab_content_widget, "Solution")
 
         # testing
@@ -277,6 +287,21 @@ class MainWindow(QMainWindow):
         )
 
     def run_optimisation(self):
+        # disable the UI in the problem tab (to prevent settings from being
+        # overridden as they are being read)
+        self.problem_tab_content_widget.setDisabled(True)
+        # disabling a widget implicitly disables all its children, and
+        # enabling a widget implicitly enables all its children that have not
+        # been explicitly disabled, so there is no need to worry about the
+        # remove constraint buttons being enabled when they shouldnt be
+        # reference for this is https://stackoverflow.com/a/34892529
+        # [accessed 2025-01-05 at 13:45]
+        # note that it specifically talks about the c++ version of qt5, but it
+        # seems to still apply to qt6 (and thus its language bindings)
+
+        # process events (so that the UI disable event is handled)
+        self.qt_application_reference.processEvents()
+
         # FIXME: this is a stub as the actual functionality hasnt yet been
         # implemented
         # currently being used to trigger debug functionality
@@ -314,6 +339,10 @@ class MainWindow(QMainWindow):
         # algorithm, but it caused it to error out (possibly due to the
         # filtering either failing to apply or failing to check recipes
         # referencing items that were manually set)
+        # i have since removed most of the code that i added after my first
+        # working implementation of the simplex algorithm, only keeping bits
+        # that either do not get executed or are optimisations that almost
+        # certainly are unable to cause errors of the kind i was seeing.
         """print('start prefilter')
         start_time = time.time_ns()
         # resources that no recipe makes and we dont have a manual input of
@@ -444,3 +473,12 @@ class MainWindow(QMainWindow):
         print('end pivot')
         print((end_time-start_time)/(10**9))
         print(t.get_variable_values())
+
+        # re-enable the UI in the problem tab now that the problem is solved
+        self.problem_tab_content_widget.setDisabled(False)
+        # as this is the end of the callback, we do not need to process events
+        # manually (since the main loop will do that for us)
+
+        # TODO: add an exception handler to automatically re-enable the UI if
+        # something goes wrong in the callback (since pyside6 already makes
+        # exceptions non-fatal)
