@@ -27,7 +27,7 @@ from PySide6.QtCore import Qt
 from thirdparty.flowlayout import FlowLayout
 
 from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
-from satisfactoryobjects.itemvariabletype import ItemVariableType
+from satisfactoryobjects.itemvariabletype import ItemVariableType, ItemVariableTypes
 from satisfactoryobjects.lookuperrors import RecipeLookupError
 # CAUTION: these better have been populated by the time Target.__init__()
 # starts getting called or it will likely break
@@ -36,6 +36,7 @@ from satisfactoryobjects.itemhandler import items
 from satisfactoryobjects.recipelookup import lookup_recipes
 
 from utils.directionenums import Direction
+from utils.variabletypetags import VariableType
 
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
@@ -330,7 +331,7 @@ class MainWindow(QMainWindow):
             else:
                 resource = items[available_resource]
                 manually_set_constraints.add(resource)
-                cons = Inequality([Variable(ItemVariableType(resource, True), 1)], Fraction(number_per_minute))
+                cons = Inequality([Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), 1)], Fraction(number_per_minute))
                 print(cons)
                 problem_constraints.append(cons)
 
@@ -401,10 +402,10 @@ class MainWindow(QMainWindow):
 
         # add the constraints for the absolute numbers of items
         for resource in items.values():
-            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, False), 1)]
+            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, ItemVariableTypes.TOTAL), 1)]
             # if a manual input of this resource exists, add it to the constraint
             if resource in manually_set_constraints:
-                constraint_variables.append(Variable(ItemVariableType(resource, True), -1))
+                constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), -1))
             # add data on the recipes producing this item
             try:
                 producing_recipes = lookup_recipes(resource)
@@ -429,7 +430,11 @@ class MainWindow(QMainWindow):
 
         # add the constraints for the recipes
         for resource in items.values():
-            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, False), -1)]
+            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, ItemVariableTypes.TOTAL), -1)]
+            # TODO: make this an actual check for if the item is one of the targets
+            if resource == items["Desc_OreIron_C"]:
+                # also TODO: put this in the try block somehow, and if the except block is triggered when this condition is met then swap the variable in the objective equation to be of the TOTAL type instead of the OUTPUT type, to keep the tableau smaller
+                constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.OUTPUT), 1))
             try:
                 for recipe in lookup_recipes(resource, True):
                     for flow_data in recipe.calc_resource_flow_rate(
@@ -451,12 +456,15 @@ class MainWindow(QMainWindow):
                 MainWindow.logger.debug(
                     'No recipes consume item with id '
                     f'{resource.internal_class_identifier}'
-                    ', not adding usage constraint'
+                    ', not adding usage constraint unless target'
                 )
+                # TODO: with regards to above about putting in the try block: replace this logic with something better
+                if len(constraint_variables) == 2:
+                    problem_constraints.append(Inequality(constraint_variables, 0))
 
         # add the objectives and their weights
         # TODO: make this not be a stub
-        problem_constraints.append(ObjectiveEquation([Variable(ItemVariableType(items["Desc_IronIngot_C"], False), -1)]))
+        problem_constraints.append(ObjectiveEquation([Variable(ItemVariableType(items["Desc_OreIron_C"], ItemVariableTypes.OUTPUT), -1)]))
 
         print(len(problem_constraints))
 
@@ -473,6 +481,10 @@ class MainWindow(QMainWindow):
         print('end pivot')
         print((end_time-start_time)/(10**9))
         print(t.get_variable_values())
+        for var_id, var_val in t.get_variable_values():
+            if var_id.type == VariableType.NORMAL:
+                if type(var_id.name) == type("") and var_val != 0:
+                    print(f'{var_id.name}: {var_val}')
 
         # re-enable the UI in the problem tab now that the problem is solved
         self.problem_tab_content_widget.setDisabled(False)
