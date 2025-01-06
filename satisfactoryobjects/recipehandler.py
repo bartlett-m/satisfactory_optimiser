@@ -15,7 +15,7 @@ def handler(obj):
         # toplevel_logger.debug(_class["mIngredients"])
         # recipes.append(_class["mIngredients"])
 
-        toplevel_logger.debug(f"Loading recipe {_class["ClassName"]}")
+        toplevel_logger.debug(f'Loading recipe {_class["ClassName"]}')
         try:
             recipes[_class["ClassName"]] = Recipe(
                 _class["ClassName"],
@@ -42,11 +42,11 @@ def handler(obj):
             )
         except ItemLookupError:
             toplevel_logger.error(
-                f"Skipping recipe {_class["ClassName"]} "
+                f'Skipping recipe {_class["ClassName"]} '
                 "due to error looking up a resource"
             )
         except MachineLookupError:
             toplevel_logger.error(
-                f"Skipping recipe {_class["ClassName"]} "
+                f'Skipping recipe {_class["ClassName"]} '
                 "due to error looking up all machines"
             )

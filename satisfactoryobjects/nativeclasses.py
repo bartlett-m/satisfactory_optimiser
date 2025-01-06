@@ -28,7 +28,7 @@ class SatisfactoryNativeClassHandler:
                 obj["NativeClass"]
             ]
             SatisfactoryNativeClassHandler.logger.debug(
-                    f"Enqueueing handling of class {obj["NativeClass"]}"
+                    f'Enqueueing handling of class {obj["NativeClass"]}'
                 )
             SatisfactoryNativeClassHandler._handler_queue.put(
                 PrioritisedItem(handler._defer_pass, obj)
@@ -36,7 +36,7 @@ class SatisfactoryNativeClassHandler:
         except KeyError:
             # no registered handler for class
             SatisfactoryNativeClassHandler.logger.debug(
-                f"No handler registered for class {obj["NativeClass"]}"
+                f'No handler registered for class {obj["NativeClass"]}'
             )
 
     def handle() -> None:
@@ -49,7 +49,7 @@ class SatisfactoryNativeClassHandler:
             ]
             handler._handle(obj)
             SatisfactoryNativeClassHandler.logger.debug(
-                f"Handled class {obj["NativeClass"]}"
+                f'Handled class {obj["NativeClass"]}'
             )
 
     # some test handlers
