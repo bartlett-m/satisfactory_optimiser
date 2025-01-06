@@ -42,8 +42,8 @@ class Item(BaseSatisfactoryObject):
             "-----\n"
             f"Known as: {self.user_facing_name}\n"
             f"Has energy value of {self.energy_value}MJ "
-            f"{"m^-3" if self.is_fluid else "(item)^-1"}\n"
-            f"Is {("" if self.is_fluid else "not ")}a fluid"
+            f'{"m^-3" if self.is_fluid else "(item)^-1"}\n'
+            f'Is {("" if self.is_fluid else "not ")}a fluid'
         )
 
     def __eq__(self, other: object) -> bool:

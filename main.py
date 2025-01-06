@@ -119,9 +119,7 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
 
     verbosity_level_option = QCommandLineOption(
         'l',
-        f'Log verbosity level (one of {', '.join(
-            [lvl for lvl in VALID_LOG_VERBOSITY_LEVELS]
-        )})',
+        f'Log verbosity level (one of {", ".join([lvl for lvl in VALID_LOG_VERBOSITY_LEVELS])})',
         'verbosity',
         'warn'
     )
