@@ -32,7 +32,9 @@ class RecipeUsage(QFrame):
         layout.addWidget(title_widget, 0, 0, 1, 4)
 
         layout.addWidget(QLabel('Number of machines'), 1, 0, 1, 2)
-        layout.addWidget(QLabel(str(float(number_used)), alignment=Qt.AlignmentFlag.AlignHCenter), 2, 0, 1, 2)
+        machine_number_label = QLabel(str(float(number_used)), alignment=Qt.AlignmentFlag.AlignHCenter)
+        machine_number_label.setToolTip(str(number_used))
+        layout.addWidget(machine_number_label, 2, 0, 1, 2)
 
         layout.addWidget(QLabel('Total power consumption'), 1, 2, 1, 2)
 
