@@ -25,7 +25,7 @@ def lookup_recipes(target_item: Item, lookup_consuming_recipes: bool = False) ->
     if len(_ret) == 0:
         raise RecipeLookupError(
             'No recipes '
-            f'{('consum' if lookup_consuming_recipes else 'produc')}'
+            f'{("consum" if lookup_consuming_recipes else "produc")}'
             f'e item {target_item}'
         )
 
