@@ -25,8 +25,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 from thirdparty.flowlayout import FlowLayout
+from thirdparty.clearlayout import clear_layout
 
 from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
+from satisfactoryobjects.items import Item
 from satisfactoryobjects.itemvariabletype import ItemVariableType, ItemVariableTypes
 from satisfactoryobjects.lookuperrors import RecipeLookupError
 # CAUTION: these better have been populated by the time Target.__init__()
@@ -40,10 +42,10 @@ from utils.variabletypetags import VariableType
 
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
-from .item import Item
+from .recipeusage import RecipeUsage
 from .constraints_widget import ConstraintsWidget, Constraint
 
-from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable
+from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable, SimplexAlgorithmDoneException
 
 
 toplevel_logger = logging.getLogger(__name__)
@@ -272,9 +274,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(solution_tab_content_widget, "Solution")
 
         # testing
-        self.solution_layout.addWidget(Item("test1", 1))
-        self.solution_layout.addWidget(Item("test2", 2))
-        self.solution_layout.addWidget(Item("test3", 3))
+        # self.solution_layout.addWidget(RecipeUsage("Recipe_IngotIron_C", 2))
 
         # set the tab layout as the main widget
         self.setCentralWidget(self.tabs)
@@ -301,6 +301,12 @@ class MainWindow(QMainWindow):
         # seems to still apply to qt6 (and thus its language bindings)
 
         # process events (so that the UI disable event is handled)
+        self.qt_application_reference.processEvents()
+
+        # clear anything left over in the solution layout from previous runs
+        clear_layout(self.solution_layout)
+        # make sure that this gets processed
+        # FIXME: this doesnt actually work - the deletion only gets processed after the callback is done?
         self.qt_application_reference.processEvents()
 
         target_weights: list[tuple[str, float]] = self.targets_widget.get_constraints()
@@ -416,7 +422,11 @@ class MainWindow(QMainWindow):
         print(t.get_variable_values())
         for var_id, var_val in t.get_variable_values():
             if var_id.type == VariableType.NORMAL:
-                if type(var_id.name) == type("") and var_val != 0:
+                # check for string type
+                # source: https://stackoverflow.com/a/4843178
+                # [accessed 2025-01-06 at 13:12]
+                if isinstance(var_id.name, str) and var_val != 0:
+                    self.solution_layout.addWidget(RecipeUsage(var_id.name, var_val))
                     print(f'{var_id.name}: {var_val}')
 
         # re-enable the UI in the problem tab now that the problem is solved
