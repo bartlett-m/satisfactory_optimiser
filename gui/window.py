@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QApplication
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThreadPool
 
 from thirdparty.flowlayout import FlowLayout
 from thirdparty.clearlayout import clear_layout
@@ -44,6 +44,7 @@ from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 
 from .recipeusage import RecipeUsage
 from .constraints_widget import ConstraintsWidget, Constraint
+from .simplexworker import SimplexWorker
 
 from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable, SimplexAlgorithmDoneException
 
@@ -279,6 +280,13 @@ class MainWindow(QMainWindow):
         # set the tab layout as the main widget
         self.setCentralWidget(self.tabs)
 
+        self.thread_pool = QThreadPool()
+        MainWindow.logger.info(
+            'Multithreading with a maximum of '
+            f'{self.thread_pool.maxThreadCount()}'
+            ' threads.'
+        )
+
     def add_target(self):
         self.targets_widget.add_constraint(Constraint(items, default_value=1))
 
@@ -286,6 +294,23 @@ class MainWindow(QMainWindow):
         self.resource_availability_constraints_widget.add_constraint(
             Constraint(items)
         )
+
+    def process_simplex_progress(self, progress: int):
+        print(f'Have completed {progress} pivots')
+
+    def enable_problem_tab_interface(self):
+        self.problem_tab_content_widget.setDisabled(False)
+
+    def process_simplex_result(self, result: list):
+        print(result)
+        for var_id, var_val in result:
+            if var_id.type == VariableType.NORMAL:
+                # check for string type
+                # source: https://stackoverflow.com/a/4843178
+                # [accessed 2025-01-06 at 13:12]
+                if isinstance(var_id.name, str) and var_val != 0:
+                    self.solution_layout.addWidget(RecipeUsage(var_id.name, var_val))
+                    print(f'{var_id.name}: {var_val}')
 
     def run_optimisation(self):
         # disable the UI in the problem tab (to prevent settings from being
@@ -407,30 +432,28 @@ class MainWindow(QMainWindow):
 
         # print(len(problem_constraints))
 
-        t = Tableau(
-            problem_constraints
-        )
+        simplex_worker = SimplexWorker(problem_constraints)
+        simplex_worker.signals.result.connect(self.process_simplex_result)
+        simplex_worker.signals.finished.connect(self.enable_problem_tab_interface)
+        simplex_worker.signals.progress.connect(self.process_simplex_progress)
+
+        self.thread_pool.start(simplex_worker)
+
+        #t = Tableau(
+        #    problem_constraints
+        #)
 
         # print(t.get_variable_values())
 
-        print('start pivot')
-        start_time = time.time_ns()
-        t.pivot_until_done()
-        end_time = time.time_ns()
-        print('end pivot')
-        print((end_time-start_time)/(10**9))
-        print(t.get_variable_values())
-        for var_id, var_val in t.get_variable_values():
-            if var_id.type == VariableType.NORMAL:
-                # check for string type
-                # source: https://stackoverflow.com/a/4843178
-                # [accessed 2025-01-06 at 13:12]
-                if isinstance(var_id.name, str) and var_val != 0:
-                    self.solution_layout.addWidget(RecipeUsage(var_id.name, var_val))
-                    print(f'{var_id.name}: {var_val}')
+        #print('start pivot')
+        #start_time = time.time_ns()
+        #t.pivot_until_done()
+        #end_time = time.time_ns()
+        #print('end pivot')
+        #print((end_time-start_time)/(10**9))
 
         # re-enable the UI in the problem tab now that the problem is solved
-        self.problem_tab_content_widget.setDisabled(False)
+        # self.problem_tab_content_widget.setDisabled(False)
         # as this is the end of the callback, we do not need to process events
         # manually (since the main loop will do that for us)
 
