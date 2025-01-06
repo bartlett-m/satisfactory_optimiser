@@ -131,14 +131,14 @@ class MainWindow(QMainWindow):
         self.targets_widget = ConstraintsWidget()
 
         # start with one target
-        self.targets_widget.add_constraint(Constraint(items))
+        self.targets_widget.add_constraint(Constraint(items, default_value=1))
 
         # create the header for the production targets section
         (
             targets_subsection_header,
             add_target_button
         ) = make_form_subsection_header(
-            'Targets'
+            'Target weightings'
         )
         # setup the callback to add new targets
         add_target_button.clicked.connect(self.add_target)
@@ -280,7 +280,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
 
     def add_target(self):
-        self.targets_widget.add_constraint(Constraint(items))
+        self.targets_widget.add_constraint(Constraint(items, default_value=1))
 
     def add_resource_availability_constraint(self):
         self.resource_availability_constraints_widget.add_constraint(
@@ -303,18 +303,14 @@ class MainWindow(QMainWindow):
         # process events (so that the UI disable event is handled)
         self.qt_application_reference.processEvents()
 
-        # FIXME: this is a stub as the actual functionality hasnt yet been
-        # implemented
-        # currently being used to trigger debug functionality
-        test = self.targets_widget.layout_.itemAt(0).widget()
-        print(test.currentData())
-        print(test.currentText())
-        print(test.currentIndex())
-        print(self.targets_widget.get_constraints())
-
-        for target_item, target_production_rate in self.targets_widget.get_constraints():
-            print(items[target_item])
-            print(target_production_rate)
+        target_weights: list[tuple[str, float]] = self.targets_widget.get_constraints()
+        # used to more quickly filter what items need output "virtual recipes"
+        # created
+        target_items: set[Item] = {
+            items[target_weight[0]]
+            for target_weight
+            in target_weights
+        }
 
         manually_set_constraints: set[Item] = set()
         problem_constraints: list[Inequality] = list()
@@ -332,7 +328,7 @@ class MainWindow(QMainWindow):
                 resource = items[available_resource]
                 manually_set_constraints.add(resource)
                 cons = Inequality([Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), 1)], Fraction(number_per_minute))
-                print(cons)
+                # print(cons)
                 problem_constraints.append(cons)
 
         # add the constraints for the absolute numbers of items
@@ -366,8 +362,7 @@ class MainWindow(QMainWindow):
         # add the constraints for the recipes
         for resource in items.values():
             constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, ItemVariableTypes.TOTAL), -1)]
-            # TODO: make this an actual check for if the item is one of the targets
-            if resource == items["Desc_OreIron_C"]:
+            if resource in target_items:
                 # also TODO: put this in the try block somehow, and if the except block is triggered when this condition is met then swap the variable in the objective equation to be of the TOTAL type instead of the OUTPUT type, to keep the tableau smaller
                 constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.OUTPUT), 1))
             try:
@@ -398,16 +393,19 @@ class MainWindow(QMainWindow):
                     problem_constraints.append(Inequality(constraint_variables, 0))
 
         # add the objectives and their weights
-        # TODO: make this not be a stub
-        problem_constraints.append(ObjectiveEquation([Variable(ItemVariableType(items["Desc_OreIron_C"], ItemVariableTypes.OUTPUT), -1)]))
+        problem_constraints.append(ObjectiveEquation([
+            Variable(ItemVariableType(items[target_weight[0]], ItemVariableTypes.OUTPUT), target_weight[1] * -1)
+            for target_weight
+            in target_weights
+        ]))
 
-        print(len(problem_constraints))
+        # print(len(problem_constraints))
 
         t = Tableau(
             problem_constraints
         )
 
-        print(t.get_variable_values())
+        # print(t.get_variable_values())
 
         print('start pivot')
         start_time = time.time_ns()
