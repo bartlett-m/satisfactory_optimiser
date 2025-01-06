@@ -19,11 +19,11 @@ from satisfactoryobjects import (
 )
 
 VALID_LOG_VERBOSITY_LEVELS = {
-    "debug": logging.DEBUG,
-    "info": logging.INFO,
-    "warn": logging.WARNING,
-    "error": logging.ERROR,
-    "crit": logging.CRITICAL
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warn': logging.WARNING,
+    'error': logging.ERROR,
+    'crit': logging.CRITICAL
 }
 
 toplevel_logger = logging.getLogger(__name__)
@@ -69,15 +69,19 @@ def get_default_satisfactory_docs_path() -> pathlib.Path | None:
         case 'linux':
             # best tested platform.
             return pathlib.PosixPath(
-                "~/.local/share/Steam/steamapps/common/Satisfactory/"
+                '~/.local/share/Steam/steamapps/common/Satisfactory/'
             ).expanduser().joinpath(SATISFACTORY_DOCS).resolve()
         case 'win32' | 'cygwin':
             # all windows
             # i think cygwin lets you access windows paths directly
             # windows is the only platform satisfactory itself officially
             # supports
-            # TODO: check where the file is on Windows
-            return None
+            # TODO: check if a PosixPath is required under cygwin (pathlib
+            # will refuse to instantiate a WindowsPath on a posix system and
+            # vice versa)
+            return pathlib.WindowsPath(
+                'C:/Program Files (x86)/Steam/steamapps/common/Satisfactory/'
+            ).joinpath(SATISFACTORY_DOCS).resolve()
         case 'darwin':
             # macos (darwin bsd)
             # official support not planned but should work
@@ -104,9 +108,9 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
     suggested_default_path = get_default_satisfactory_docs_path()
 
     file_path_option = QCommandLineOption(
-        "p",
-        "Path to Docs.json",
-        "path"
+        'p',
+        'Path to Docs.json',
+        'path'
     )
 
     if suggested_default_path is not None:
@@ -114,12 +118,12 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
     parser.addOption(file_path_option)
 
     verbosity_level_option = QCommandLineOption(
-        "l",
-        f"Log verbosity level (one of {', '.join(
+        'l',
+        f'Log verbosity level (one of {', '.join(
             [lvl for lvl in VALID_LOG_VERBOSITY_LEVELS]
-        )})",
-        "verbosity",
-        "warn"
+        )})',
+        'verbosity',
+        'warn'
     )
     parser.addOption(verbosity_level_option)
 
@@ -131,24 +135,25 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
 
     if suggested_default_path is None and not used_path:
         raise ValueError(
-            "Path could not be autodetermined and was not specified!"
+            'Path could not be autodetermined and was not specified!'
         )
     try:
         verbosity_level = VALID_LOG_VERBOSITY_LEVELS[
             raw_verbosity_level.lower()
         ]
     except KeyError:
-        raise ValueError("Invalid log verbosity level!")
+        raise ValueError('Invalid log verbosity level!')
 
     return (pathlib.Path(used_path).expanduser().resolve(), verbosity_level)
 
 
 def register_handlers() -> None:
-    """Register the native class handlers used to load the required data.
-    WARNING: inadvisible to call this more than once"""
-    logger = toplevel_logger.getChild("register_handlers")
+    '''Register the native class handlers used to load the required data.
+    WARNING: inadvisible to call this more than once
+    '''
+    logger = toplevel_logger.getChild('register_handlers')
 
-    logger.debug("Begin registering native class handlers")
+    logger.debug('Begin registering native class handlers')
 
     nativeclasses.SatisfactoryNativeClassHandler(
         (
@@ -209,25 +214,26 @@ def register_handlers() -> None:
         itemhandler.handler
     )
 
-    logger.debug("Finished registering native class handlers")
+    logger.debug('Finished registering native class handlers')
 
 
 def load_docs(satisfactory_docs_absolute_path: pathlib.Path) -> None:
-    """Load Docs.json at the given path and trigger handlers
-    WARNING: Inadvisable to call this more than once."""
-    logger = toplevel_logger.getChild("load_docs")
+    '''Load Docs.json at the given path and trigger handlers
+    WARNING: Inadvisable to call this more than once.
+    '''
+    logger = toplevel_logger.getChild('load_docs')
 
     logger.debug(
-        f"Opening documentation file {satisfactory_docs_absolute_path}"
+        f'Opening documentation file {satisfactory_docs_absolute_path}'
     )
-    with open(satisfactory_docs_absolute_path, "r", encoding="UTF-16") as fptr:
-        logger.debug("Deserialising documentation data")
+    with open(satisfactory_docs_absolute_path, 'r', encoding='UTF-16') as fptr:
+        logger.debug('Deserialising documentation data')
         dat = json.load(fptr)
-        logger.debug("Loading documentation data")
+        logger.debug('Loading documentation data')
         for obj in dat:
             # add the handlers to a priority queue
             nativeclasses.SatisfactoryNativeClassHandler.enqueue_handle(obj)
-        logger.debug("Finished preparing documentation data load")
+        logger.debug('Finished preparing documentation data load')
         # dequeue all the handlers in order
         nativeclasses.SatisfactoryNativeClassHandler.handle()
 
@@ -236,7 +242,7 @@ def main(
     configured_docs_path: pathlib.Path,
     qt_application: QApplication
 ) -> int:
-    logger = toplevel_logger.getChild("main")
+    logger = toplevel_logger.getChild('main')
 
     logger.info(
         f'Satisfactory docs path to use is {configured_docs_path}'
@@ -273,7 +279,7 @@ def main(
             recipe
             for recipe
             in recipelookup.lookup_recipes(
-                itemhandler.items["Desc_IronPlate_C"]
+                itemhandler.items['Desc_IronPlate_C']
             )
         ]
     )
@@ -283,9 +289,9 @@ def main(
     # )
 
     print()
-    print(recipehandler.recipes["Recipe_Plastic_C"].calc_resource_flow_rate())
-    print(itemhandler.items["Desc_LiquidOil_C"])
-    print(itemhandler.items["Desc_Coal_C"])
+    print(recipehandler.recipes['Recipe_Plastic_C'].calc_resource_flow_rate())
+    print(itemhandler.items['Desc_LiquidOil_C'])
+    print(itemhandler.items['Desc_Coal_C'])
 
     # gui init
 
@@ -296,21 +302,21 @@ def main(
     return qt_application.exec()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setApplicationName("Satisfactory Optimiser")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationName('Satisfactory Optimiser')
+    app.setApplicationVersion('1.0.0')
 
     configured_docs_path, configured_log_level = parse_arguments(app)
 
     logging.basicConfig(
         level=configured_log_level,
-        filename="last.log",
-        filemode="w"
+        filename='last.log',
+        filemode='w'
     )
-    toplevel_logger.debug("Early init done (logging configured).")
+    toplevel_logger.debug('Early init done (logging configured).')
     toplevel_logger.debug(
-        "Errors should now be loggable in addition to panic/ignore"
+        'Errors should now be loggable in addition to panic/ignore'
     )
 
     # call main program, and exit with the return code it provides
