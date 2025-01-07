@@ -280,6 +280,8 @@ class MainWindow(QMainWindow):
         # set the tab layout as the main widget
         self.setCentralWidget(self.tabs)
 
+        self.simplex_worker_thread: SimplexWorker = None
+
         self.thread_pool = QThreadPool()
         MainWindow.logger.info(
             'Multithreading with a maximum of '
@@ -295,10 +297,16 @@ class MainWindow(QMainWindow):
             Constraint(items)
         )
 
+    def closeEvent(self, event):
+        if self.simplex_worker_thread is not None:
+            self.simplex_worker_thread.cancel_soon()
+        return super().closeEvent(event)
+
     def process_simplex_progress(self, progress: int):
         print(f'Have completed {progress} pivots')
 
-    def enable_problem_tab_interface(self):
+    def process_simplex_terminate(self):
+        self.simplex_worker_thread = None
         self.problem_tab_content_widget.setDisabled(False)
 
     def process_simplex_result(self, result: list):
@@ -432,12 +440,12 @@ class MainWindow(QMainWindow):
 
         # print(len(problem_constraints))
 
-        simplex_worker = SimplexWorker(problem_constraints)
-        simplex_worker.signals.result.connect(self.process_simplex_result)
-        simplex_worker.signals.finished.connect(self.enable_problem_tab_interface)
-        simplex_worker.signals.progress.connect(self.process_simplex_progress)
+        self.simplex_worker_thread = SimplexWorker(problem_constraints)
+        self.simplex_worker_thread.signals.result.connect(self.process_simplex_result)
+        self.simplex_worker_thread.signals.finished.connect(self.process_simplex_terminate)
+        self.simplex_worker_thread.signals.progress.connect(self.process_simplex_progress)
 
-        self.thread_pool.start(simplex_worker)
+        self.thread_pool.start(self.simplex_worker_thread)
 
         #t = Tableau(
         #    problem_constraints

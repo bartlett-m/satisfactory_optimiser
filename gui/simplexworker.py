@@ -23,18 +23,25 @@ class SimplexWorker(QRunnable):
         super(SimplexWorker, self).__init__(*args, **kwargs)
         self.tableau = Tableau(problem)
         self.signals = SimplexWorkerSignals()
+        self.cancelled = False
+
+    def cancel_soon(self):
+        self.cancelled = True
 
     @Slot()
     def run(self):
         try:
             pivot_count = 0
             try:
-                while True:
+                while not self.cancelled:
                     self.tableau.pivot()
                     pivot_count += 1
                     self.signals.progress.emit(pivot_count)
             except SimplexAlgorithmDoneException:
                 pass
+            if self.cancelled:
+                self.signals.finished.emit()
+                return
             result = self.tableau.get_variable_values()
         # equivalent to bare except but doesn't trigger flake8
         except BaseException:
