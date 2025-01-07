@@ -126,9 +126,11 @@ class TestTableau(unittest.TestCase):
             ]
         )
 
-    @unittest.skip(
-        'fails due to floating-point inaccuracy (but is close enough)'
-    )
+    def float_equality_func(self, first: float, second: float, msg=None) -> None:
+        if simplex.is_float_zero(first - second):
+            return
+        raise self.failureException(msg)
+
     def test_solve_and_report_values_2(self):
         # actually just me doing further maths discrete classwork
         # but i found some bugs in my new constructor so it was useful
@@ -157,6 +159,11 @@ class TestTableau(unittest.TestCase):
         # print(t._get_variable_value(1))
         # print(t.get_variable_values())
 
+        self.addTypeEqualityFunc(
+            float,
+            self.float_equality_func
+        )
+
         # assertCountEqual is NOT checking whether the length of the two lists
         # is the same.
         # it instead checks that each unique item in the list occurs the same
@@ -166,21 +173,30 @@ class TestTableau(unittest.TestCase):
         # returned variable values would not need to be in any particular
         # order in practice (although as of writing my api does return them in
         # a consistent order when sortable variable identifiers are used)
-        self.assertCountEqual(
-            t.get_variable_values(),
-            [
-                (NamedTypeTag(VariableType.NORMAL, 'x'), Fraction(63, 17)),
-                (NamedTypeTag(VariableType.NORMAL, 'y'), Fraction(40, 17)),
-                (NamedTypeTag(VariableType.SLACK, 0), 0),
-                # this being out of order is to check if python ever changes
-                # the behaviour of assertCountEqual and also to show that
-                # assertCountEqual does not care about ordering
-                # as of writing, these last two lines are swapped compared to
-                # the actual order simplex returns
-                (AnonymousTypeTag(VariableType.OBJECTIVE), Fraction(246, 17)),
-                (NamedTypeTag(VariableType.SLACK, 1), 0)
-            ]
-        )
+        expecteds = [
+            (NamedTypeTag(VariableType.NORMAL, 'x'), Fraction(63, 17)),
+            (NamedTypeTag(VariableType.NORMAL, 'y'), Fraction(40, 17)),
+            (NamedTypeTag(VariableType.SLACK, 0), 0),
+            # this being out of order is to check if python ever changes
+            # the behaviour of assertCountEqual and also to show that
+            # assertCountEqual does not care about ordering
+            # as of writing, these last two lines are swapped compared to
+            # the actual order simplex returns
+            (AnonymousTypeTag(VariableType.OBJECTIVE), Fraction(246, 17)),
+            (NamedTypeTag(VariableType.SLACK, 1), 0)
+        ]
+        result = t.get_variable_values()
+        self.assertEqual(len(result), len(expecteds))
+        for variable_tag, variable_value in result:
+            # iterating like this to prevent errors when we modify expecteds during this
+            for i in range(len(expecteds)):
+                if expecteds[i][0] == variable_tag:
+                    self.assertEqual(float(expecteds[i][1]), variable_value)
+                    del expecteds[i]  # count duplicates
+                    break
+            else:
+                # one of the results wasnt in the expecteds
+                raise self.failureException('A result was not in the expected values')
 
         # for row in t._tableau:
         #     print(row)
