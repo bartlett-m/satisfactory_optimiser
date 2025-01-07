@@ -19,36 +19,20 @@ class SimplexAlgorithmDoneException(AlgorithmDoneException):
 
 # helper utility that handles the special case of division by zero in the
 # simplex algorithm
-def pivot_div(numerator: Rational, denominator: Rational) -> Fraction | None:
+def pivot_div(numerator: float, denominator: float) -> float | None:
     # TODO: return a different result for positive value divided by zero and
     # negative value divided by zero
     # a negative value divided by zero should (iirc) be skipped, a positive
     # value divided by zero should be preferred (or it might be the other way
     # round)
-    try:
-        # TODO: remove try-except and instead repurpose this new guard clause
-        # we dont care about what the ratio would be if it is less than zero
-        # anyway, so we can just not bother for those cases and return None
-        if numerator == 0 and denominator <= 0:
-            return None
-        return Fraction(numerator, denominator)
-    except ZeroDivisionError:
-        # In this case, we want to ignore this row.  One possible solution
-        # would be to return a special type here that signifies a division by
-        # zero.  Another solution would be to return positive infinity,
-        # however this would make troubleshooting harder if for whatever
-        # reason every row ratio check resulted in a division by zero.  A
-        # third (hacky) solution is to rely on the fact that we are already
-        # filtering out negative ratios, and just return Fraction(-1).
-        #
-        # For the sake of my own sanity, I will be modifying my type hints to
-        # additionaly permit a a return of None (as opposed to a raised
-        # ZeroDivsionError), and then I will check for that in my filter
+
+    if denominator == 0 or (numerator == 0 and denominator <= 0):
         return None
+    return numerator / denominator
 
 
 class TableauRow():
-    def __init__(self, row: list[Fraction]) -> None:
+    def __init__(self, row: list[float]) -> None:
         self._row = row
 
     def __mul__(self, other: object) -> type["TableauRow"]:
@@ -104,7 +88,16 @@ class TableauRow():
     def __sub__(self, other: type["TableauRow"]) -> type["TableauRow"]:
         if not issubclass(type(other), TableauRow):
             return NotImplemented
-        return self.__add__(other*-1)
+        return TableauRow(
+            [
+                coefficient_1 - coefficient_2
+                for coefficient_1, coefficient_2
+                in zip(
+                    self._row,
+                    other._row
+                )
+            ]
+        )
 
     def __eq__(self, other: object) -> bool:
         if issubclass(type(other), TableauRow):
@@ -117,7 +110,7 @@ class TableauRow():
     def __str__(self) -> str:
         return self._row.__str__()
 
-    def __getitem__(self, index: int) -> Fraction:
+    def __getitem__(self, index: int) -> float:
         return self._row[index]
 
     def min(self):
@@ -126,7 +119,7 @@ class TableauRow():
     def index(self, item):
         return self._row.index(item)
 
-    def _get_rhs(self) -> Fraction:
+    def _get_rhs(self) -> float:
         return self._row[-1]
 
     rhs = property(
@@ -140,7 +133,7 @@ class Variable():
     def __init__(
         self,
         id,
-        coefficient: Rational,
+        coefficient: float,
     ):
         self.id = id
         self.coefficient = coefficient
@@ -155,7 +148,7 @@ class Inequality():
     def __init__(
         self,
         lhs: Iterable[Variable],
-        rhs: Rational
+        rhs: float
     ):
         self._lhs = {
             var.id: var.coefficient
@@ -163,7 +156,7 @@ class Inequality():
             in lhs
         }  # make this a dictionary of variable_id:coefficient and other data
         # see comment in tableau_left_padded about casting to fraction
-        self.rhs = Fraction(rhs)
+        self.rhs = rhs
 
     def _get_lhs(self):
         return [Variable(_id, coef) for _id, coef in self._lhs.items()]
@@ -174,8 +167,8 @@ class Inequality():
             objective variable), as a list of variables"
     )
 
-    def _get_obj_coef(self) -> Rational:
-        return Fraction(0)
+    def _get_obj_coef(self) -> float:
+        return float(0)
 
     objective_coefficient = property(
         fget=_get_obj_coef,
@@ -195,24 +188,24 @@ class Inequality():
                 # would return floats which are imprecise and also cannot be
                 # used in the pivot_div function to construct fractions, since
                 # float does not subclass rational.
-                yield Fraction(variable_coef)
+                yield variable_coef
             except KeyError:
                 # no such variable in this inequality
-                yield Fraction(0)
+                yield float(0)
 
 
 class ObjectiveEquation(Inequality):
     def __init__(
         self,
         lhs: Iterable[Variable],
-        rhs: Rational = Fraction(0),
-        objective_coefficient: Rational = Fraction(1)
+        rhs: float = float(0),
+        objective_coefficient: float = float(1)
     ):
         super().__init__(lhs, rhs)
         self._objective_coefficient = objective_coefficient
 
-    def _get_obj_coef(self) -> Rational:
-        return Fraction(self._objective_coefficient)
+    def _get_obj_coef(self) -> float:
+        return float(self._objective_coefficient)
 
     objective_coefficient = property(
         fget=_get_obj_coef,
@@ -225,7 +218,7 @@ class Tableau():
         self,
         inequalities: list[Inequality],
     ) -> None:
-        self._tableau: list[list[Fraction]] = []
+        self._tableau: list[list[float]] = []
         _vars = set()
         for inequality in inequalities:
             for variable_id in inequality._lhs:
@@ -342,7 +335,7 @@ class Tableau():
                             _consistently_ordered_vars
                         ),
                         # filler zeroes for slack variables
-                        repeat(Fraction(0), inequality_idx),
+                        repeat(float(0), inequality_idx),
                         # for slack variable (do not include for the
                         # objective row)
                         (
@@ -351,13 +344,13 @@ class Tableau():
                                 type(inequality),
                                 ObjectiveEquation
                             )
-                            else [Fraction(1)]
+                            else [float(1)]
                         ),
                         # remaining zeroes for slack variables
                         # (max ensures that there isnt -1 or -2 repeats
                         # for the objective row)
                         repeat(
-                            Fraction(0),
+                            float(0),
                             max([
                                 (len(inequalities) - (inequality_idx + 2)),
                                 0
@@ -372,26 +365,27 @@ class Tableau():
             self._tableau.append(TableauRow(_row))
 
     def _get_pivot_column(self) -> int:
-        # # get the objective row and find the value of the most negative entry
-        # most_neg = self._tableau[-1].min()
-        # # if there are no negative entries in the objective row, then the
-        # # algorithm is complete
-        # if most_neg >= 0:
-        #     raise SimplexAlgorithmDoneException()
-        # # otherwise, get the index of this value.  this is the pivot column.
-        # return self._tableau[-1].index(most_neg)
-        # # note that the algorithm will work with any negative entry in the
-        # # objective row, however it is more optimal to use the most negative
-        # # entry.
+        """# get the objective row and find the value of the most negative entry
+        most_neg = self._tableau[-1].min()
+        # if there are no negative entries in the objective row, then the
+        # algorithm is complete
+        if most_neg >= 0:
+            raise SimplexAlgorithmDoneException()
+        # otherwise, get the index of this value.  this is the pivot column.
+        return self._tableau[-1].index(most_neg)
+        # note that the algorithm will work with any negative entry in the
+        # objective row, however it is more optimal to use the most negative
+        # entry."""
 
         # hacky patch to try and make it not cycle by using blands rule
+        print(self._tableau[-1].min())
         for column, entry in enumerate(self._tableau[-1]._row):
             if entry < 0:
                 return column
         raise SimplexAlgorithmDoneException()
 
     def _get_pivot_row(self, pivot_column: int) -> int:
-        row_ratios: list[Fraction | None] = [
+        row_ratios: list[float | None] = [
             pivot_div(row[-1], row[pivot_column])
             for row
             # exclude the objective row via slicing
@@ -411,7 +405,15 @@ class Tableau():
 
     def pivot(self) -> None:  # pivoting is in-place
         column = self._get_pivot_column()
+        print(column)
         row = self._get_pivot_row(column)
+        print(row)
+        print(self._tableau_header[column])
+        __test_temp = self.get_variable_values()
+        for __test_temp_val in __test_temp:
+            if __test_temp_val[0].type == VariableType.OBJECTIVE:
+                print("obj")
+                print(__test_temp_val[1])
         # get a copy of the pivot row, which will then be modified
         pivoted_row = self._tableau[row]
         # get a copy of the pivot element, which will be used to modify the
@@ -448,7 +450,7 @@ class Tableau():
         except SimplexAlgorithmDoneException:
             return  # done now
 
-    def _get_variable_value(self, column: int) -> Fraction:
+    def _get_variable_value(self, column: int) -> float:
         # if the variable is basic, its column has all zeroes except for a
         # single row with a value of one.  the right hand side of the row with
         # a one is the value of this basic variable.  otherwise, the variable
@@ -474,10 +476,10 @@ class Tableau():
                     possible_value is not None
                 )
             ):
-                return Fraction(0)
+                return float(0)
             elif row[column] == 1:
                 possible_value = row.rhs
-        return (Fraction(0) if possible_value is None else possible_value)
+        return (float(0) if possible_value is None else possible_value)
 
     def get_variable_values(self) -> list:  # TODO: more specific type hint
         _ret: list = [
