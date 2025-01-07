@@ -469,6 +469,8 @@ class MainWindow(QMainWindow):
         manually_set_constraints: set[Item] = set()
         problem_constraints: list[Inequality] = list()
 
+        manually_set_constraint_values: dict[Item, Fraction] = dict()
+
         # add the constraints for the input items
         for available_resource, available_resource_rate in self.resource_availability_constraints_widget.get_constraints():
             number_per_minute = available_resource_rate
@@ -481,16 +483,17 @@ class MainWindow(QMainWindow):
             else:
                 resource = items[available_resource]
                 manually_set_constraints.add(resource)
-                cons = Inequality([Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), 1)], Fraction(number_per_minute))
+                manually_set_constraint_values[resource] = Fraction(number_per_minute)
+                #cons = Inequality([Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), 1)], Fraction(number_per_minute))
                 # print(cons)
-                problem_constraints.append(cons)
+                #problem_constraints.append(cons)
 
         # add the constraints for the absolute numbers of items
         for resource in items.values():
             constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, ItemVariableTypes.TOTAL), 1)]
             # if a manual input of this resource exists, add it to the constraint
-            if resource in manually_set_constraints:
-                constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), -1))
+            #if resource in manually_set_constraints:
+            #    constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), -1))
             # add data on the recipes producing this item
             try:
                 producing_recipes = lookup_recipes(resource)
@@ -510,7 +513,7 @@ class MainWindow(QMainWindow):
                     ', only adding data about manual input'
                 )
 
-            cons = Inequality(constraint_variables, 0)
+            cons = Inequality(constraint_variables, (manually_set_constraint_values[resource] if resource in manually_set_constraints else 0))
             problem_constraints.append(cons)
 
         # add the constraints for the recipes
