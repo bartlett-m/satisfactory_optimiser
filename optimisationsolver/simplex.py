@@ -1,6 +1,4 @@
 import logging
-from numbers import Rational
-from fractions import Fraction
 from typing import Iterable
 from itertools import filterfalse, repeat, chain
 from utils.exceptions import AlgorithmDoneException
@@ -17,6 +15,22 @@ class SimplexAlgorithmDoneException(AlgorithmDoneException):
         )
 
 
+# checks to prevent the instability introduced by floating-point imprecision
+# tolerance value (and exact logic of these checks) from:
+# https://github.com/dmishin/pylinprog/tree/c64a994dbb041352cde52eb8029199bdc635c756
+# [accessed 2025-01-07 at 16:25]
+# note that i did try adding a tolerance before, but did not do so in all
+# places and tested on a case where the fix didn't work regardless.
+
+def is_float_zero(val: float, tolerance: float = 1e-6) -> bool:
+    assert tolerance >= 0
+    return abs(val) < tolerance
+
+
+def is_float_nonnegative(val: float, tolerance: float = 1e-6) -> bool:
+    return is_float_zero(val, tolerance) or val > 0
+
+
 # helper utility that handles the special case of division by zero in the
 # simplex algorithm
 def pivot_div(numerator: float, denominator: float) -> float | None:
@@ -26,7 +40,7 @@ def pivot_div(numerator: float, denominator: float) -> float | None:
     # value divided by zero should be preferred (or it might be the other way
     # round)
 
-    if denominator == 0 or (numerator == 0 and denominator <= 0):
+    if is_float_zero(denominator) or (is_float_zero(numerator) and denominator < 0):
         return None
     return numerator / denominator
 
@@ -365,22 +379,22 @@ class Tableau():
             self._tableau.append(TableauRow(_row))
 
     def _get_pivot_column(self) -> int:
-        """# get the objective row and find the value of the most negative entry
+        # get the objective row and find the value of the most negative entry
         most_neg = self._tableau[-1].min()
         # if there are no negative entries in the objective row, then the
         # algorithm is complete
-        if most_neg >= 0:
+        if is_float_nonnegative(most_neg):
             raise SimplexAlgorithmDoneException()
         # otherwise, get the index of this value.  this is the pivot column.
         return self._tableau[-1].index(most_neg)
         # note that the algorithm will work with any negative entry in the
         # objective row, however it is more optimal to use the most negative
-        # entry."""
+        # entry.
 
         # hacky patch to try and make it not cycle by using blands rule
         print(self._tableau[-1].min())
         for column, entry in enumerate(self._tableau[-1]._row):
-            if entry < 0:
+            if not is_float_nonnegative(entry):
                 return column
         raise SimplexAlgorithmDoneException()
 
@@ -397,7 +411,7 @@ class Tableau():
             min(
                 # filter out the negative ratios
                 filterfalse(
-                    lambda ratio: ratio is None or ratio < 0,
+                    lambda ratio: ratio is None or not is_float_nonnegative(ratio),
                     row_ratios
                 )
             )
@@ -461,25 +475,31 @@ class Tableau():
         # standpoint
         possible_value = None
         for row in self._tableau:
+            # boolean that is checked twice so only calculate it once
+            # equivalent of row[column] == 1
+            rcequals1 = is_float_zero(row[column]-1)
             if (
                 (
                     not (
-                        row[column] == 0
+                        is_float_zero(row[column])
                         or
-                        row[column] == 1
+                        rcequals1
                     )
                 )
                 or
                 (
-                    row[column] == 1
+                    rcequals1
                     and
                     possible_value is not None
                 )
             ):
                 return float(0)
-            elif row[column] == 1:
+            elif rcequals1:
                 possible_value = row.rhs
-        return (float(0) if possible_value is None else possible_value)
+        # check for if the float is zero (with tolerance) to eliminate cases
+        # where recipes with numbers of machines in the 10^-14 and smaller are
+        # returned
+        return (float(0) if possible_value is None or is_float_zero(possible_value) else possible_value)
 
     def get_variable_values(self) -> list:  # TODO: more specific type hint
         _ret: list = [
