@@ -1,6 +1,7 @@
 from typing import Iterable
 from fractions import Fraction
 from itertools import filterfalse
+import sys
 import logging
 # to log how long pivoting takes
 import time
@@ -20,9 +21,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QDoubleSpinBox,
     QGroupBox,
-    QApplication
+    QApplication,
+    QRadioButton,
+    QButtonGroup,
+    QMessageBox
 )
-from PySide6.QtCore import Qt, QThreadPool
+from PySide6.QtCore import Qt, QThreadPool, QSettings
 
 from thirdparty.flowlayout import FlowLayout
 from thirdparty.clearlayout import clear_layout
@@ -50,6 +54,17 @@ from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, V
 
 
 toplevel_logger = logging.getLogger(__name__)
+
+failed_notification_backend_imports: set[str] = set()
+notification_senders = {
+    'null': lambda summary, body: 0
+}
+
+try:
+    from .notifications import dbus
+    notification_senders['dbus'] = dbus.add_notification
+except ImportError:
+    failed_notification_backend_imports.add('dbus')
 
 
 def make_form_subsection_header(
@@ -96,6 +111,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Satisfactory Optimiser")
 
+        self.settings = QSettings()
+
         self.tabs = QTabWidget()
 
         # holds the scroll area and the run optimisation button
@@ -108,9 +125,13 @@ class MainWindow(QMainWindow):
         # why the inconsistency?  because pyside6 just doesnt want to behave
         # and i had to rewrite this entire function
 
+        # holds the scroll area and the apply/revert buttons
+        settings_layout = QVBoxLayout()
+
         # make scrollable regions for the contents of the tabs
         problem_form_container = QScrollArea()
         solution_tab_content_widget = QScrollArea()
+        settings_form_container = QScrollArea()
 
         # why is the code here so inconsistent and messy?
         # because i moved stuff around until finding an order that wasnt buggy
@@ -126,6 +147,8 @@ class MainWindow(QMainWindow):
 
         # widget to contain the problem form
         problem_form_layout_container = QFrame()
+        # and same for the settings form
+        settings_form_layout_container = QFrame()
         # was an actual QFormLayout, but this caused some layout issues that a
         # QVBoxLayout fixed
         self.problem_form_layout = QVBoxLayout(problem_form_layout_container)
@@ -270,9 +293,84 @@ class MainWindow(QMainWindow):
         # and add the layout to it
         self.problem_tab_content_widget.setLayout(self.problem_layout)
 
+        # same for the settings
+        settings_form_layout = QFormLayout()
+
+        # layout for the notification backend radio buttons
+        notification_backend_select_layout = QHBoxLayout()
+
+        if self.settings.value('notifications/backend') is None:
+            MainWindow.logger.debug('Creating setting for notification backend')
+            self.settings.setValue('notifications/backend', 'null')
+
+        if self.settings.value('notifications/backend') in failed_notification_backend_imports:
+            MainWindow.logger.critical(
+                'User-configured notification backend with id '
+                f'{self.settings.value("notifications.backend")}'
+                ' failed to load!  Warning user.'
+            )
+            error_dialog = QMessageBox(
+                QMessageBox.Icon.Critical,
+                'Configuration problem',
+                f'The selected notification backend failed to load.  Restore default setting for notifications and continue, or quit program for troubleshooting?',
+                QMessageBox.StandardButton.RestoreDefaults | QMessageBox.StandardButton.Abort
+            )
+            response = error_dialog.exec()
+            if response == QMessageBox.StandardButton.RestoreDefaults:
+                MainWindow.logger.warning(
+                    'Repairing configuration: resetting notifications/backend '
+                    'to null'
+                )
+                self.settings.setValue('notifications/backend', 'null')
+            else:
+                MainWindow.logger.critical('User declined configuration repair.')
+                MainWindow.logger.critical('Exiting due to configuration error')
+                sys.exit(78)
+
+        self.notification_backend_buttons = {
+            'null': (QRadioButton('None'), 'Do not send notifications'),
+            'dbus': (QRadioButton('D-Bus'), 'Used on Un*x and Un*x-like systems')
+        }
+
+        for button_setting_id, button_tuple in self.notification_backend_buttons.items():
+            button_tuple[0].setToolTip(button_tuple[1])
+            if button_setting_id in failed_notification_backend_imports:
+                button_tuple[0].setDisabled(True)
+
+        notification_backend_select_layout.addWidget(
+            self.notification_backend_buttons['null'][0]
+        )
+        notification_backend_select_layout.addWidget(
+            self.notification_backend_buttons['dbus'][0]
+        )
+
+        settings_form_layout.addRow('Notification backend:', notification_backend_select_layout)
+
+        settings_form_layout_container.setLayout(settings_form_layout)
+
+        settings_form_container.setWidget(settings_form_layout_container)
+
+        settings_layout.addWidget(settings_form_container)
+
+        apply_settings_button = QPushButton('Apply')
+        apply_settings_button.setToolTip('Apply new settings to program and write to file on disk')
+        apply_settings_button.clicked.connect(self.write_settings)
+        cancel_settings_button = QPushButton('Cancel')
+        cancel_settings_button.setToolTip('Discard changes made to settings and reload from file on disk')
+        cancel_settings_button.clicked.connect(self.reload_settings)
+        settings_button_layout = QHBoxLayout()
+        settings_button_layout.addWidget(cancel_settings_button)
+        settings_button_layout.addWidget(apply_settings_button)
+
+        settings_layout.addLayout(settings_button_layout)
+
+        settings_tab_content_widget = QWidget()
+        settings_tab_content_widget.setLayout(settings_layout)
+
         # add the tabs
-        self.tabs.addTab(self.problem_tab_content_widget, "Problem")
-        self.tabs.addTab(solution_tab_content_widget, "Solution")
+        self.tabs.addTab(self.problem_tab_content_widget, 'Problem')
+        self.tabs.addTab(solution_tab_content_widget, 'Solution')
+        self.tabs.addTab(settings_tab_content_widget, 'Settings')
 
         # testing
         # self.solution_layout.addWidget(RecipeUsage("Recipe_IngotIron_C", 2))
@@ -288,6 +386,18 @@ class MainWindow(QMainWindow):
             f'{self.thread_pool.maxThreadCount()}'
             ' threads.'
         )
+
+        # load in the settings from the file
+        self.reload_settings()
+
+    def reload_settings(self):
+        for button_setting_id, button_tuple in self.notification_backend_buttons.items():
+            button_tuple[0].setChecked(button_setting_id == self.settings.value('notifications/backend'))
+
+    def write_settings(self):
+        for button_setting_id, button_tuple in self.notification_backend_buttons.items():
+            if button_tuple[0].isChecked():
+                self.settings.setValue('notifications/backend', button_setting_id)
 
     def add_target(self):
         self.targets_widget.add_constraint(Constraint(items, default_value=1))
@@ -308,6 +418,11 @@ class MainWindow(QMainWindow):
     def process_simplex_terminate(self):
         self.simplex_worker_thread = None
         self.problem_tab_content_widget.setDisabled(False)
+        notification_senders[
+            self.settings.value('notifications/backend')
+        ](
+            'Optimisation complete', 'View the results in the Solution tab'
+        )
 
     def process_simplex_result(self, result: list):
         print(result)

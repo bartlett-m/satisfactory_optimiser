@@ -250,7 +250,7 @@ def main(
 
     load_docs(configured_docs_path)
 
-    print(
+    '''print(
         [
             item
             for _, item
@@ -289,7 +289,7 @@ def main(
     print()
     print(recipehandler.recipes['Recipe_Plastic_C'].calc_resource_flow_rate())
     print(itemhandler.items['Desc_LiquidOil_C'])
-    print(itemhandler.items['Desc_Coal_C'])
+    print(itemhandler.items['Desc_Coal_C'])'''
 
     # gui init
 
@@ -304,6 +304,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setApplicationName('Satisfactory Optimiser')
     app.setApplicationVersion('1.0.0')
+    app.setOrganizationName('bartlett-m')
+    app.setOrganizationDomain('bartlett-m.github.io')
 
     configured_docs_path, configured_log_level = parse_arguments(app)
 
