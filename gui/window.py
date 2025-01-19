@@ -117,11 +117,15 @@ class MainWindow(QMainWindow):
 
         # holds the scroll area and the run optimisation button
         self.problem_layout = QVBoxLayout()
+        # holds the solution scroll area and the quick overview
+        self.solution_layout = QVBoxLayout()
+        solution_layout_container = QWidget()
+        solution_layout_container.setLayout(self.solution_layout)
         # seemingly needed to make the scroll area play nice with the flow
         # layout
-        solution_layout_container = QWidget()
+        solution_detail_view_layout_container = QWidget()
         # is held within a scroll area instead
-        self.solution_layout = FlowLayout(solution_layout_container)
+        self.solution_detail_view_layout = FlowLayout(solution_detail_view_layout_container)
         # why the inconsistency?  because pyside6 just doesnt want to behave
         # and i had to rewrite this entire function
 
@@ -130,7 +134,7 @@ class MainWindow(QMainWindow):
 
         # make scrollable regions for the contents of the tabs
         problem_form_container = QScrollArea()
-        solution_tab_content_widget = QScrollArea()
+        solution_detail_view_container = QScrollArea()
         settings_form_container = QScrollArea()
 
         # why is the code here so inconsistent and messy?
@@ -138,12 +142,15 @@ class MainWindow(QMainWindow):
         # what determines whether pyside6 behaves how i want it to or not will
         # forever be a mystery to me
         # put the flowlayout wrapper widget in the scrollarea
-        solution_tab_content_widget.setWidget(solution_layout_container)
+        solution_detail_view_container.setWidget(solution_detail_view_layout_container)
 
         # allow the form to dynamically resize as items are added and remove,
         # rather than squashing new items
         problem_form_container.setWidgetResizable(True)
-        solution_tab_content_widget.setWidgetResizable(True)
+        solution_detail_view_container.setWidgetResizable(True)
+
+        self.solution_layout.addWidget(solution_detail_view_container)
+
 
         # widget to contain the problem form
         problem_form_layout_container = QFrame()
@@ -369,7 +376,7 @@ class MainWindow(QMainWindow):
 
         # add the tabs
         self.tabs.addTab(self.problem_tab_content_widget, 'Problem')
-        self.tabs.addTab(solution_tab_content_widget, 'Solution')
+        self.tabs.addTab(solution_layout_container, 'Solution')
         self.tabs.addTab(settings_tab_content_widget, 'Settings')
 
         # testing
@@ -432,7 +439,7 @@ class MainWindow(QMainWindow):
                 # source: https://stackoverflow.com/a/4843178
                 # [accessed 2025-01-06 at 13:12]
                 if isinstance(var_id.name, str) and var_val != 0:
-                    self.solution_layout.addWidget(RecipeUsage(var_id.name, var_val))
+                    self.solution_detail_view_layout.addWidget(RecipeUsage(var_id.name, var_val))
                     print(f'{var_id.name}: {var_val}')
 
     def run_optimisation(self):
@@ -452,7 +459,7 @@ class MainWindow(QMainWindow):
         self.qt_application_reference.processEvents()
 
         # clear anything left over in the solution layout from previous runs
-        clear_layout(self.solution_layout)
+        clear_layout(self.solution_detail_view_layout)
         # make sure that this gets processed
         # FIXME: this doesnt actually work - the deletion only gets processed after the callback is done?
         self.qt_application_reference.processEvents()
