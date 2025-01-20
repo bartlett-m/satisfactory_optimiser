@@ -24,7 +24,8 @@ from PySide6.QtWidgets import (
     QApplication,
     QRadioButton,
     QButtonGroup,
-    QMessageBox
+    QMessageBox,
+    QSplitter
 )
 from PySide6.QtCore import Qt, QThreadPool, QSettings
 
@@ -49,6 +50,7 @@ from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 from .recipeusage import RecipeUsage
 from .constraints_widget import ConstraintsWidget, Constraint
 from .simplexworker import SimplexWorker
+from .solutionquickoverview import SolutionQuickOverview
 
 from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable, SimplexAlgorithmDoneException
 
@@ -117,10 +119,6 @@ class MainWindow(QMainWindow):
 
         # holds the scroll area and the run optimisation button
         self.problem_layout = QVBoxLayout()
-        # holds the solution scroll area and the quick overview
-        self.solution_layout = QVBoxLayout()
-        solution_layout_container = QWidget()
-        solution_layout_container.setLayout(self.solution_layout)
         # seemingly needed to make the scroll area play nice with the flow
         # layout
         solution_detail_view_layout_container = QWidget()
@@ -149,7 +147,17 @@ class MainWindow(QMainWindow):
         problem_form_container.setWidgetResizable(True)
         solution_detail_view_container.setWidgetResizable(True)
 
-        self.solution_layout.addWidget(solution_detail_view_container)
+        solution_tab_content_widget = QSplitter()
+        solution_tab_content_widget.setOrientation(Qt.Orientation.Vertical)
+
+        solution_tab_content_widget.addWidget(solution_detail_view_container)
+
+        # widget for the quick overview of the solution
+        self.solution_quick_view_widget = SolutionQuickOverview()
+
+        solution_tab_content_widget.addWidget(
+            self.solution_quick_view_widget
+        )
 
 
         # widget to contain the problem form
@@ -376,11 +384,8 @@ class MainWindow(QMainWindow):
 
         # add the tabs
         self.tabs.addTab(self.problem_tab_content_widget, 'Problem')
-        self.tabs.addTab(solution_layout_container, 'Solution')
+        self.tabs.addTab(solution_tab_content_widget, 'Solution')
         self.tabs.addTab(settings_tab_content_widget, 'Settings')
-
-        # testing
-        # self.solution_layout.addWidget(RecipeUsage("Recipe_IngotIron_C", 2))
 
         # set the tab layout as the main widget
         self.setCentralWidget(self.tabs)
