@@ -159,6 +159,14 @@ class MainWindow(QMainWindow):
             self.solution_quick_view_widget
         )
 
+        # make the solution quick overview be the smaller one by default
+        solution_tab_content_widget.setStretchFactor(
+            # act on first widget i.e. the solution details
+            0,
+            # some large constant i.e. make this take up a lot of space, in
+            # practice this is however much is available
+            1 << 16
+        )
 
         # widget to contain the problem form
         problem_form_layout_container = QFrame()
