@@ -168,6 +168,9 @@ class MainWindow(QMainWindow):
             1 << 16
         )
 
+        # do not permit the solution full overview to be hidden
+        solution_tab_content_widget.setCollapsible(0, False)
+
         # widget to contain the problem form
         problem_form_layout_container = QFrame()
         # and same for the settings form
