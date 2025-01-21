@@ -20,7 +20,7 @@ class SolutionQuickOverview(QWidget):
             requested_item_production_view_layout_container
         )
 
-        # static labels
+        # create and add static labels
 
         layout.addWidget(
             QLabel(
@@ -46,6 +46,26 @@ class SolutionQuickOverview(QWidget):
                 alignment=Qt.AlignmentFlag.AlignHCenter
             ),
             2, 0, 1, 4
+        )
+
+        # create dynamic labels
+        self.objective_variable_value_label = QLabel(
+            'Nothing yet'
+        )
+
+        self.total_power_consumption_value_label = QLabel(
+            '0 MW'
+        )
+
+        # add dynamic labels
+        layout.addWidget(
+            self.objective_variable_value_label,
+            1, 1
+        )
+
+        layout.addWidget(
+            self.total_power_consumption_value_label,
+            1, 3
         )
 
         requested_item_production_view_container = QScrollArea()
