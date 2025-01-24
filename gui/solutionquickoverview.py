@@ -50,11 +50,11 @@ class SolutionQuickOverview(QWidget):
 
         # create dynamic labels
         self.objective_variable_value_label = QLabel(
-            'Nothing yet'
+            'Egads, something went awry!  Widget is not initialised properly!'
         )
 
         self.total_power_consumption_value_label = QLabel(
-            '0 MW'
+            'Egads, something went awry!  Widget is not initialised properly!'
         )
 
         # add dynamic labels
@@ -80,3 +80,14 @@ class SolutionQuickOverview(QWidget):
         )
 
         self.setLayout(layout)
+
+        self.reset_dynamic_labels()
+
+    def set_total_power_consumption(self, value):
+        '''Helper function to set the total power consumption label to a value with the unit appended'''
+        self.total_power_consumption_value_label.setText(str(value) + ' MW')
+
+    def reset_dynamic_labels(self):
+        '''Resets the dynamic labels for objective variable value and total power consumption'''
+        self.objective_variable_value_label.setText('Nothing yet')
+        self.set_total_power_consumption(0)
