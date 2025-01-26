@@ -317,7 +317,13 @@ class MainWindow(QMainWindow):
         # add the tabs
         self.tabs.addTab(self.problem_tab_content_widget, 'Problem')
         self.tabs.addTab(solution_tab_content_widget, 'Solution')
-        self.tabs.addTab(SettingsTabContent(self.settings, failed_notification_backend_imports), 'Settings')
+        self.tabs.addTab(
+            SettingsTabContent(
+                self.settings,
+                failed_notification_backend_imports
+            ),
+            'Settings'
+        )
 
         # set the tab layout as the main widget
         self.setCentralWidget(self.tabs)
@@ -357,7 +363,6 @@ class MainWindow(QMainWindow):
         )
 
     def process_simplex_result(self, result: list):
-        print(result)
         total_power_usage = float()
         for var_id, var_val in result:
             if var_id.type == VariableType.NORMAL:

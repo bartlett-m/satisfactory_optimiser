@@ -3,7 +3,7 @@
 from fractions import Fraction
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QLabel, QWidget, QSizePolicy, QScrollArea
+from PySide6.QtWidgets import QGridLayout, QLabel, QWidget, QScrollArea
 
 from satisfactoryobjects.items import Item
 

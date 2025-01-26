@@ -1,8 +1,18 @@
 import sys
 import logging
 
-from PySide6.QtCore import Qt, QSettings
-from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QScrollArea, QFrame, QFormLayout, QMessageBox, QRadioButton, QPushButton
+from PySide6.QtCore import QSettings
+from PySide6.QtWidgets import (
+    QWidget,
+    QFrame,
+    QHBoxLayout,
+    QVBoxLayout,
+    QFormLayout,
+    QScrollArea,
+    QMessageBox,
+    QPushButton,
+    QRadioButton
+)
 
 toplevel_logger = logging.getLogger(__name__)
 
@@ -33,7 +43,8 @@ class SettingsTabContent(QWidget):
         # layout for the notification backend radio buttons
         notification_backend_select_layout = QHBoxLayout()
 
-        # validate and optionally repair the notification backend button setting
+        # validate and optionally repair the notification backend button
+        # setting
         if self.settings.value('notifications/backend') is None:
             toplevel_logger.debug('Creating setting for notification backend')
             self.settings.setValue('notifications/backend', 'null')
