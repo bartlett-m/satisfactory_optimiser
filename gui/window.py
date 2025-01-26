@@ -52,6 +52,7 @@ from .constraints_widget import ConstraintsWidget, Constraint
 from .simplexworker import SimplexWorker
 from .solutionquickoverview import SolutionQuickOverview
 from .settingstabcontent import SettingsTabContent
+from .solutiontabcontent import SolutionTabContent
 
 from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable, SimplexAlgorithmDoneException
 
@@ -120,53 +121,20 @@ class MainWindow(QMainWindow):
 
         # holds the scroll area and the run optimisation button
         self.problem_layout = QVBoxLayout()
-        # seemingly needed to make the scroll area play nice with the flow
-        # layout
-        solution_detail_view_layout_container = QWidget()
-        # is held within a scroll area instead
-        self.solution_detail_view_layout = FlowLayout(solution_detail_view_layout_container)
-        # why the inconsistency?  because pyside6 just doesnt want to behave
-        # and i had to rewrite this entire function
 
         # make scrollable regions for the contents of the tabs
         problem_form_container = QScrollArea()
-        solution_detail_view_container = QScrollArea()
 
         # why is the code here so inconsistent and messy?
         # because i moved stuff around until finding an order that wasnt buggy
         # what determines whether pyside6 behaves how i want it to or not will
         # forever be a mystery to me
-        # put the flowlayout wrapper widget in the scrollarea
-        solution_detail_view_container.setWidget(solution_detail_view_layout_container)
 
-        # allow the form to dynamically resize as items are added and remove,
+        # allow the form to dynamically resize as items are added and removed,
         # rather than squashing new items
         problem_form_container.setWidgetResizable(True)
-        solution_detail_view_container.setWidgetResizable(True)
 
-        solution_tab_content_widget = QSplitter()
-        solution_tab_content_widget.setOrientation(Qt.Orientation.Vertical)
-
-        solution_tab_content_widget.addWidget(solution_detail_view_container)
-
-        # widget for the quick overview of the solution
-        self.solution_quick_view_widget = SolutionQuickOverview()
-
-        solution_tab_content_widget.addWidget(
-            self.solution_quick_view_widget
-        )
-
-        # make the solution quick overview be the smaller one by default
-        solution_tab_content_widget.setStretchFactor(
-            # act on first widget i.e. the solution details
-            0,
-            # some large constant i.e. make this take up a lot of space, in
-            # practice this is however much is available
-            1 << 16
-        )
-
-        # do not permit the solution full overview to be hidden
-        solution_tab_content_widget.setCollapsible(0, False)
+        self.solution_tab_content_widget = SolutionTabContent()
 
         # widget to contain the problem form
         problem_form_layout_container = QFrame()
@@ -316,7 +284,7 @@ class MainWindow(QMainWindow):
 
         # add the tabs
         self.tabs.addTab(self.problem_tab_content_widget, 'Problem')
-        self.tabs.addTab(solution_tab_content_widget, 'Solution')
+        self.tabs.addTab(self.solution_tab_content_widget, 'Solution')
         self.tabs.addTab(
             SettingsTabContent(
                 self.settings,
@@ -370,7 +338,7 @@ class MainWindow(QMainWindow):
                 # source: https://stackoverflow.com/a/4843178
                 # [accessed 2025-01-06 at 13:12]
                 if isinstance(var_id.name, str) and var_val != 0:
-                    self.solution_detail_view_layout.addWidget(
+                    self.solution_tab_content_widget.add_recipe_usage_widget_to_detail_view_layout(
                         RecipeUsage(var_id.name, var_val)
                     )
                     print(f'{var_id.name}: {var_val}')
@@ -382,13 +350,13 @@ class MainWindow(QMainWindow):
                 # also get the outputs
                 elif isinstance(var_id.name, ItemVariableType):
                     if var_id.name.type is ItemVariableTypes.OUTPUT:
-                        self.solution_quick_view_widget.add_requested_item_production_view_entry(
+                        self.solution_tab_content_widget.add_requested_item_production_view_entry(
                             var_id.name.item,
                             var_val
                         )
             elif var_id.type == VariableType.OBJECTIVE:
-                self.solution_quick_view_widget.set_objective_variable_value(var_val)
-        self.solution_quick_view_widget.set_total_power_consumption(total_power_usage)
+                self.solution_tab_content_widget.set_objective_variable_value(var_val)
+        self.solution_tab_content_widget.set_total_power_consumption(total_power_usage)
 
     def run_optimisation(self):
         # disable the UI in the problem tab (to prevent settings from being
@@ -407,8 +375,7 @@ class MainWindow(QMainWindow):
         self.qt_application_reference.processEvents()
 
         # clear anything left over in the solution tab from previous runs
-        clear_layout(self.solution_detail_view_layout)
-        self.solution_quick_view_widget.reset_all()
+        self.solution_tab_content_widget.reset_all()
         # make sure that this gets processed
         # FIXME: this doesnt actually work - the deletion only gets processed
         # after the callback is done?
