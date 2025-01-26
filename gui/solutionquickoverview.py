@@ -1,7 +1,13 @@
 '''Widget to provide a quick overview of the solution'''
 
+from fractions import Fraction
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel, QWidget, QSizePolicy, QScrollArea
+
+from satisfactoryobjects.items import Item
+
+from thirdparty.clearlayout import clear_layout
 
 
 class SolutionQuickOverview(QWidget):
@@ -87,7 +93,45 @@ class SolutionQuickOverview(QWidget):
         '''Helper function to set the total power consumption label to a value with the unit appended'''
         self.total_power_consumption_value_label.setText(str(value) + ' MW')
 
+    def set_objective_variable_value(self, value: Fraction):
+        '''Helper function to set the objective variable value label and its tooltip'''
+        self.objective_variable_value_label.setText(
+            str(float(value))
+        )
+        self.objective_variable_value_label.setToolTip(str(value))
+
     def reset_dynamic_labels(self):
         '''Resets the dynamic labels for objective variable value and total power consumption'''
         self.objective_variable_value_label.setText('Nothing yet')
+        self.objective_variable_value_label.setToolTip(
+            'You probably want to go look in the Problem tab'
+        )
         self.set_total_power_consumption(0)
+
+    def add_requested_item_production_view_entry(
+        self,
+        item: Item,
+        number_produced: Fraction
+    ):
+        # If no co-ordinates are specified, QGridLayout.addWidget will
+        # automatically assign the next free co-ordinates, going left-to-right
+        # and then top-to-bottom.  Unfortunately, there is no way to specify
+        # just the column co-ordinate (so that the layout will have the
+        # correct number of columns) or to specify the number of columns when
+        # the layout is constructed.  So instead, we calculate the current row
+        # manually for the number produced.
+        self.requested_item_production_view_layout.addWidget(
+            QLabel(item.user_facing_name)
+        )
+        number_produced_label = QLabel(str(float(number_produced)) + '/min')
+        number_produced_label.setToolTip(str(number_produced))
+        self.requested_item_production_view_layout.addWidget(
+            number_produced_label,
+            self.requested_item_production_view_layout.rowCount()-1,
+            1,
+            alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+    def reset_all(self):
+        self.reset_dynamic_labels()
+        clear_layout(self.requested_item_production_view_layout)
