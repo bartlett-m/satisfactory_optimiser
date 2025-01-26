@@ -21,16 +21,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QDoubleSpinBox,
     QGroupBox,
-    QApplication,
-    QRadioButton,
-    QButtonGroup,
-    QMessageBox,
-    QSplitter
+    QApplication
 )
 from PySide6.QtCore import Qt, QThreadPool, QSettings
-
-from thirdparty.flowlayout import FlowLayout
-from thirdparty.clearlayout import clear_layout
 
 from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
 from satisfactoryobjects.items import Item
@@ -50,7 +43,6 @@ from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 from .recipeusage import RecipeUsage
 from .constraints_widget import ConstraintsWidget, Constraint
 from .simplexworker import SimplexWorker
-from .solutionquickoverview import SolutionQuickOverview
 from .settingstabcontent import SettingsTabContent
 from .solutiontabcontent import SolutionTabContent
 

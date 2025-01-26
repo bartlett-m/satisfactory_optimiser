@@ -3,7 +3,6 @@ from PySide6.QtWidgets import QSplitter, QWidget, QScrollArea
 
 from .solutionquickoverview import SolutionQuickOverview
 from .config_constants import LARGE_STRETCH_FACTOR_CONSTANT
-from .recipeusage import RecipeUsage
 
 from thirdparty.flowlayout import FlowLayout
 from thirdparty.clearlayout import clear_layout
