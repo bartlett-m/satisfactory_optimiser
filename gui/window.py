@@ -449,14 +449,22 @@ class MainWindow(QMainWindow):
 
     def process_simplex_result(self, result: list):
         print(result)
+        total_power_usage = float()
         for var_id, var_val in result:
             if var_id.type == VariableType.NORMAL:
                 # check for string type
                 # source: https://stackoverflow.com/a/4843178
                 # [accessed 2025-01-06 at 13:12]
                 if isinstance(var_id.name, str) and var_val != 0:
-                    self.solution_detail_view_layout.addWidget(RecipeUsage(var_id.name, var_val))
+                    self.solution_detail_view_layout.addWidget(
+                        RecipeUsage(var_id.name, var_val)
+                    )
                     print(f'{var_id.name}: {var_val}')
+                    total_power_usage += (
+                        var_val * recipes[var_id.name].calc_power_flow_rate(
+                            positive_direction=Direction.IN
+                        )
+                    )
                 # also get the outputs
                 elif isinstance(var_id.name, ItemVariableType):
                     if var_id.name.type is ItemVariableTypes.OUTPUT:
@@ -466,6 +474,7 @@ class MainWindow(QMainWindow):
                         )
             elif var_id.type == VariableType.OBJECTIVE:
                 self.solution_quick_view_widget.set_objective_variable_value(var_val)
+        self.solution_quick_view_widget.set_total_power_consumption(total_power_usage)
 
     def run_optimisation(self):
         # disable the UI in the problem tab (to prevent settings from being

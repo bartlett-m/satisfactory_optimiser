@@ -89,7 +89,7 @@ class SolutionQuickOverview(QWidget):
 
         self.reset_dynamic_labels()
 
-    def set_total_power_consumption(self, value):
+    def set_total_power_consumption(self, value: float):
         '''Helper function to set the total power consumption label to a value with the unit appended'''
         self.total_power_consumption_value_label.setText(str(value) + ' MW')
 
