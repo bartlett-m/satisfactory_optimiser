@@ -457,6 +457,15 @@ class MainWindow(QMainWindow):
                 if isinstance(var_id.name, str) and var_val != 0:
                     self.solution_detail_view_layout.addWidget(RecipeUsage(var_id.name, var_val))
                     print(f'{var_id.name}: {var_val}')
+                # also get the outputs
+                elif isinstance(var_id.name, ItemVariableType):
+                    if var_id.name.type is ItemVariableTypes.OUTPUT:
+                        self.solution_quick_view_widget.add_requested_item_production_view_entry(
+                            var_id.name.item,
+                            var_val
+                        )
+            elif var_id.type == VariableType.OBJECTIVE:
+                self.solution_quick_view_widget.set_objective_variable_value(var_val)
 
     def run_optimisation(self):
         # disable the UI in the problem tab (to prevent settings from being
@@ -474,10 +483,17 @@ class MainWindow(QMainWindow):
         # process events (so that the UI disable event is handled)
         self.qt_application_reference.processEvents()
 
-        # clear anything left over in the solution layout from previous runs
+        # clear anything left over in the solution tab from previous runs
         clear_layout(self.solution_detail_view_layout)
+        self.solution_quick_view_widget.reset_all()
         # make sure that this gets processed
-        # FIXME: this doesnt actually work - the deletion only gets processed after the callback is done?
+        # FIXME: this doesnt actually work - the deletion only gets processed
+        # after the callback is done?
+        # apparently this is due to DeferredDelete events only being processed
+        # in the main event loop.  see
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEventLoop.html
+        # [accessed 2025-01-04 at 09:49]
+        # for the documentation on this.
         self.qt_application_reference.processEvents()
 
         target_weights: list[tuple[str, float]] = self.targets_widget.get_constraints()
