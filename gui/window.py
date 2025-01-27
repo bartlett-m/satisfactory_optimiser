@@ -1,4 +1,3 @@
-from typing import Iterable
 from fractions import Fraction
 from itertools import filterfalse
 import sys
@@ -29,11 +28,12 @@ from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
 from satisfactoryobjects.items import Item
 from satisfactoryobjects.itemvariabletype import ItemVariableType, ItemVariableTypes
 from satisfactoryobjects.lookuperrors import RecipeLookupError
+from satisfactoryobjects.recipelookup import lookup_recipes
+from satisfactoryobjects.resourceduplicatetypingsaver import resource_duplicate_typing_saver
 # CAUTION: these better have been populated by the time Target.__init__()
 # starts getting called or it will likely break
 from satisfactoryobjects.recipehandler import recipes
 from satisfactoryobjects.itemhandler import items
-from satisfactoryobjects.recipelookup import lookup_recipes
 
 from utils.directionenums import Direction
 from utils.variabletypetags import VariableType
@@ -78,16 +78,6 @@ def make_form_subsection_header(
     )
     subsection_header_layout.addWidget(subsection_header_button)
     return (subsection_header_layout, subsection_header_button)
-
-
-def resource_duplicate_typing_saver(
-    unencapsulated_resources: Iterable[str]
-) -> Iterable[str]:
-    """For each string in the iterable, prepend Desc_ and append _C"""
-    return map(
-        lambda centre_str: f"Desc_{centre_str}_C",
-        unencapsulated_resources
-    )
 
 
 class MainWindow(QMainWindow):
@@ -426,7 +416,12 @@ class MainWindow(QMainWindow):
                         if flow_data.item == resource:
                             # using recipes class identifier string instead of
                             # the recipe object itself as recipe is unhashable
-                            constraint_variables.append(Variable(recipe.internal_class_identifier, Fraction(flow_data.amount)))
+                            constraint_variables.append(
+                                Variable(
+                                    recipe.internal_class_identifier,
+                                    Fraction(flow_data.amount)
+                                )
+                            )
             except RecipeLookupError:
                 MainWindow.logger.debug(
                     'No recipes produce item with id '
@@ -434,7 +429,14 @@ class MainWindow(QMainWindow):
                     ', only adding data about manual input'
                 )
 
-            cons = Inequality(constraint_variables, (manually_set_constraint_values[resource] if resource in manually_set_constraints else 0))
+            cons = Inequality(
+                constraint_variables,
+                (
+                    manually_set_constraint_values[resource]
+                    if resource in manually_set_constraints
+                    else 0
+                )
+            )
             problem_constraints.append(cons)
 
         # add the constraints for the recipes
@@ -451,7 +453,12 @@ class MainWindow(QMainWindow):
                     ):
                         if flow_data.item == resource:
                             # see previous note: recipe is unhashable
-                            constraint_variables.append(Variable(recipe.internal_class_identifier, Fraction(flow_data.amount)))
+                            constraint_variables.append(
+                                Variable(
+                                    recipe.internal_class_identifier,
+                                    Fraction(flow_data.amount)
+                                )
+                            )
                 if len(constraint_variables) == 1:
                     MainWindow.logger.debug(
                         'No feasible recipe consumes item with id '
@@ -466,9 +473,12 @@ class MainWindow(QMainWindow):
                     f'{resource.internal_class_identifier}'
                     ', not adding usage constraint unless target'
                 )
-                # TODO: with regards to above about putting in the try block: replace this logic with something better
+                # TODO: with regards to above about putting in the try block:
+                # replace this logic with something better
                 if len(constraint_variables) == 2:
-                    problem_constraints.append(Inequality(constraint_variables, 0))
+                    problem_constraints.append(
+                        Inequality(constraint_variables, 0)
+                    )
 
         # add the objectives and their weights
         problem_constraints.append(ObjectiveEquation([
@@ -480,9 +490,15 @@ class MainWindow(QMainWindow):
         # print(len(problem_constraints))
 
         self.simplex_worker_thread = SimplexWorker(problem_constraints)
-        self.simplex_worker_thread.signals.result.connect(self.process_simplex_result)
-        self.simplex_worker_thread.signals.finished.connect(self.process_simplex_terminate)
-        self.simplex_worker_thread.signals.progress.connect(self.process_simplex_progress)
+        self.simplex_worker_thread.signals.result.connect(
+            self.process_simplex_result
+        )
+        self.simplex_worker_thread.signals.finished.connect(
+            self.process_simplex_terminate
+        )
+        self.simplex_worker_thread.signals.progress.connect(
+            self.process_simplex_progress
+        )
 
         self.thread_pool.start(self.simplex_worker_thread)
 

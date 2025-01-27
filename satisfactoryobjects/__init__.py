@@ -9,5 +9,6 @@ __all__ = [
         "machines",
         "lookuperrors",
         "recipelookup",
-        "itemvariabletype"
+        "itemvariabletype",
+        "resourceduplicatetypingsaver"
     ]
