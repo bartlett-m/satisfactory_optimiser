@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QWidget, QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QScrollArea, QSizePolicy
+from PySide6.QtWidgets import QWidget, QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QFormLayout, QScrollArea, QSizePolicy, QDoubleSpinBox
 
+from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 from .constraints_widget import ConstraintsWidget, Constraint
 
 from satisfactoryobjects.resourceduplicatetypingsaver import resource_duplicate_typing_saver
@@ -189,6 +190,45 @@ class ProblemTabContent(QWidget):
         form_layout.addWidget(
             self.resource_availability_constraints_widget
         )
+
+        # header for the weightings widget has no add button
+        # since there are few weightings
+        form_layout.addWidget(QLabel('Weightings'))
+        self.weightings_form = QFormLayout()
+        self.power_usage_spin_box = QDoubleSpinBox()
+
+        for weight_setting_spin_box in [
+            self.power_usage_spin_box
+        ]:
+            weight_setting_spin_box.setRange(
+                float("-inf"),
+                float("inf")
+            )
+            weight_setting_spin_box.setDecimals(
+                SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
+            )
+
+        self.weightings_form.addRow('Power usage', self.power_usage_spin_box)
+
+        # possible FIXME: maybe encapsulate the QFormLayout in a QWidget to
+        # get a more consistent look with the margins
+        form_layout.addLayout(self.weightings_form)
+
+        # put the layout container widget in the scroll area
+        form_container.setWidget(form_layout_container)
+
+        # add the scroll area to the tab layout
+        layout.addWidget(form_container)
+        # create the run button
+        run_optimisation_button = QPushButton('Run Optimisation')
+        # and connect the clicked signal to the appropriate slot
+        run_optimisation_button.clicked.connect(self.run_optimisation)
+        # Add the run button outside the scroll area but within the tab layout,
+        # so it is always visible without any scrolling required.
+        layout.addWidget(run_optimisation_button)
+
+        # Now, set this widget's layout.
+        self.setLayout(layout)
 
     def add_target(self):
         '''Adds a new production target to the production targets widget'''
