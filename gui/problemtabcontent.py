@@ -1,12 +1,54 @@
-from PySide6.QtWidgets import QWidget, QFrame, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QFormLayout, QScrollArea, QSizePolicy, QDoubleSpinBox
+import logging
+from fractions import Fraction
+# prevent circular import at runtime but still allow for MainWindow type hint
+# static type checkers interpret this constant as True, but it is False at
+# runtime
+# source: https://medium.com/@k.a.fedorov/type-annotations-and-circular-imports-0a8014cd243b
+# [accessed 2025-01-31 at 09:21]
+from typing import TYPE_CHECKING
+
+from PySide6.QtWidgets import (
+    QWidget,
+    QFrame,
+    QLabel,
+    QPushButton,
+    QHBoxLayout,
+    QVBoxLayout,
+    QFormLayout,
+    QScrollArea,
+    QSizePolicy,
+    QDoubleSpinBox
+)
 
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 from .constraints_widget import ConstraintsWidget, Constraint
+from .simplexworker import SimplexWorker
 
+if TYPE_CHECKING:
+    # only used for type hint, so does not need to be imported at runtime
+    # (and if it is, the code crashes due to a circular import)
+    from .window import MainWindow
+
+from optimisationsolver.simplex import Inequality, ObjectiveEquation, Variable
+
+
+from utils.directionenums import Direction
+# from utils.variabletypetags import VariableType
+
+from satisfactoryobjects.items import Item
+from satisfactoryobjects.itemvariabletype import (
+    ItemVariableType,
+    ItemVariableTypes
+)
+from satisfactoryobjects.lookuperrors import RecipeLookupError
 from satisfactoryobjects.resourceduplicatetypingsaver import resource_duplicate_typing_saver
 # CAUTION: these better have been populated already, or things will definitely
 # break
 from satisfactoryobjects.itemhandler import items
+from satisfactoryobjects.recipelookup import lookup_recipes
+
+
+toplevel_logger = logging.getLogger(__name__)
 
 
 def make_form_subsection_header(
@@ -27,12 +69,27 @@ def make_form_subsection_header(
 
 
 class ProblemTabContent(QWidget):
+    logger = toplevel_logger.getChild('ProblemTabContent')
+
     def __init__(
         self,
+        # the type hint for this is implemented as a forward reference since
+        # otherwise it will be undefined at runtime (as MainWindow is only
+        # imported when a static type checker is running due to the circular
+        # import dependency)
+        # source: https://peps.python.org/pep-0484/#forward-references
+        # [accessed 2025-01-31 at 09:16]
+        # second source:
+        # https://medium.com/@k.a.fedorov/type-annotations-and-circular-imports-0a8014cd243b
+        # [accessed 2025-01-31 at 09:21]
+        main_window_reference: 'MainWindow',
         *args,
         **kwargs
     ):
         super(ProblemTabContent, self).__init__(*args, **kwargs)
+
+        # so the callbacks can access it
+        self.main_window_reference = main_window_reference
 
         # Holds the scroll area and the run optimisation button
         layout = QVBoxLayout()
@@ -239,3 +296,170 @@ class ProblemTabContent(QWidget):
         self.resource_availability_constraints_widget.add_constraint(
             Constraint(items)
         )
+
+    def run_optimisation(self):
+        # disable this widget (to prevent settings from being overridden as
+        # they are being read)
+        self.setDisabled(True)
+        # disabling a widget implicitly disables all its children, and
+        # enabling a widget implicitly enables all its children that have not
+        # been explicitly disabled, so there is no need to worry about the
+        # remove constraint buttons being enabled when they shouldnt be
+        # reference for this is https://stackoverflow.com/a/34892529
+        # [accessed 2025-01-05 at 13:45]
+        # note that it specifically talks about the c++ version of qt5, but it
+        # seems to still apply to qt6 (and thus its language bindings)
+
+        # process events (so that the UI disable event is handled)
+        self.main_window_reference.qt_application_reference.processEvents()
+
+        # clear anything left over in the solution tab from previous runs
+        self.main_window_reference.solution_tab_content_widget.reset_all()
+        # make sure that this gets processed
+        # FIXME: this doesnt actually work - the deletion only gets processed
+        # after the callback is done?
+        # apparently this is due to DeferredDelete events only being processed
+        # in the main event loop.  see
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEventLoop.html
+        # [accessed 2025-01-04 at 09:49]
+        # for the documentation on this.
+        self.main_window_reference.qt_application_reference.processEvents()
+
+        target_weights: list[tuple[str, float]] = self.targets_widget.get_constraints()
+        # used to more quickly filter what items need output "virtual recipes"
+        # created
+        target_items: set[Item] = {
+            items[target_weight[0]]
+            for target_weight
+            in target_weights
+        }
+
+        manually_set_constraints: set[Item] = set()
+        problem_constraints: list[Inequality] = list()
+
+        manually_set_constraint_values: dict[Item, Fraction] = dict()
+
+        # add the constraints for the input items
+        for available_resource, available_resource_rate in self.resource_availability_constraints_widget.get_constraints():
+            number_per_minute = available_resource_rate
+            if number_per_minute == 0:
+                ProblemTabContent.logger.warning(
+                    'Constraint for item with id '
+                    f'{available_resource}'
+                    ' is set to zero!  Skipping.'
+                )
+            else:
+                resource = items[available_resource]
+                manually_set_constraints.add(resource)
+                manually_set_constraint_values[resource] = Fraction(
+                    number_per_minute
+                )
+
+        # add the constraints for the absolute numbers of items
+        for resource in items.values():
+            constraint_variables: list[Variable] = [
+                Variable(
+                    ItemVariableType(resource, ItemVariableTypes.TOTAL),
+                    1
+                )
+            ]
+            # if a manual input of this resource exists, add it to the constraint
+            #if resource in manually_set_constraints:
+            #    constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), -1))
+            # add data on the recipes producing this item
+            try:
+                producing_recipes = lookup_recipes(resource)
+                for recipe in producing_recipes:
+                    for flow_data in recipe.calc_resource_flow_rate(
+                        calculated_direction=Direction.OUT,
+                        positive_direction=Direction.IN
+                    ):
+                        if flow_data.item == resource:
+                            # using recipes class identifier string instead of
+                            # the recipe object itself as recipe is unhashable
+                            constraint_variables.append(
+                                Variable(
+                                    recipe.internal_class_identifier,
+                                    Fraction(flow_data.amount)
+                                )
+                            )
+            except RecipeLookupError:
+                ProblemTabContent.logger.debug(
+                    'No recipes produce item with id '
+                    f'{resource.internal_class_identifier}'
+                    ', only adding data about manual input'
+                )
+
+            cons = Inequality(
+                constraint_variables,
+                (
+                    manually_set_constraint_values[resource]
+                    if resource in manually_set_constraints
+                    else 0
+                )
+            )
+            problem_constraints.append(cons)
+
+        # add the constraints for the recipes
+        for resource in items.values():
+            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, ItemVariableTypes.TOTAL), -1)]
+            if resource in target_items:
+                # also TODO: put this in the try block somehow, and if the except block is triggered when this condition is met then swap the variable in the objective equation to be of the TOTAL type instead of the OUTPUT type, to keep the tableau smaller
+                constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.OUTPUT), 1))
+            try:
+                for recipe in lookup_recipes(resource, True):
+                    for flow_data in recipe.calc_resource_flow_rate(
+                        calculated_direction=Direction.IN,
+                        positive_direction=Direction.IN
+                    ):
+                        if flow_data.item == resource:
+                            # see previous note: recipe is unhashable
+                            constraint_variables.append(
+                                Variable(
+                                    recipe.internal_class_identifier,
+                                    Fraction(flow_data.amount)
+                                )
+                            )
+                if len(constraint_variables) == 1:
+                    ProblemTabContent.logger.debug(
+                        'No feasible recipe consumes item with id '
+                        f'{resource.internal_class_identifier}'
+                        ', not adding usage constraint'
+                    )
+                else:
+                    problem_constraints.append(Inequality(constraint_variables, 0))
+            except RecipeLookupError:
+                ProblemTabContent.logger.debug(
+                    'No recipes consume item with id '
+                    f'{resource.internal_class_identifier}'
+                    ', not adding usage constraint unless target'
+                )
+                # TODO: with regards to above about putting in the try block:
+                # replace this logic with something better
+                if len(constraint_variables) == 2:
+                    problem_constraints.append(
+                        Inequality(constraint_variables, 0)
+                    )
+
+        # add the objectives and their weights
+        problem_constraints.append(ObjectiveEquation([
+            Variable(ItemVariableType(items[target_weight[0]], ItemVariableTypes.OUTPUT), target_weight[1] * -1)
+            for target_weight
+            in target_weights
+        ]))
+
+        # print(len(problem_constraints))
+
+        self.main_window_reference.simplex_worker_thread = SimplexWorker(problem_constraints)
+        self.main_window_reference.simplex_worker_thread.signals.result.connect(
+            self.main_window_reference.process_simplex_result
+        )
+        self.main_window_reference.simplex_worker_thread.signals.finished.connect(
+            self.main_window_reference.process_simplex_terminate
+        )
+        self.main_window_reference.simplex_worker_thread.signals.progress.connect(
+            self.main_window_reference.process_simplex_progress
+        )
+
+        self.main_window_reference.thread_pool.start(self.main_window_reference.simplex_worker_thread)
+

@@ -45,6 +45,7 @@ from .constraints_widget import ConstraintsWidget, Constraint
 from .simplexworker import SimplexWorker
 from .settingstabcontent import SettingsTabContent
 from .solutiontabcontent import SolutionTabContent
+from .problemtabcontent import ProblemTabContent
 
 from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable, SimplexAlgorithmDoneException
 
@@ -304,6 +305,8 @@ class MainWindow(QMainWindow):
         print(f'Have completed {progress} pivots')
 
     def process_simplex_terminate(self):
+        # TODO: have a flag that is set when closeEvent is fired,
+        # and dont send the notification if it got set.
         self.simplex_worker_thread = None
         self.problem_tab_content_widget.setDisabled(False)
         notification_senders[
@@ -313,6 +316,7 @@ class MainWindow(QMainWindow):
         )
 
     def process_simplex_result(self, result: list):
+        # TODO: this could easily go into the solution tab content widget file
         total_power_usage = float()
         for var_id, var_val in result:
             if var_id.type == VariableType.NORMAL:
