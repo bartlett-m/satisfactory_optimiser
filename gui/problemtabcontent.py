@@ -462,4 +462,3 @@ class ProblemTabContent(QWidget):
         )
 
         self.main_window_reference.thread_pool.start(self.main_window_reference.simplex_worker_thread)
-
