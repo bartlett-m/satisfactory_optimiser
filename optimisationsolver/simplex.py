@@ -32,6 +32,9 @@ def pivot_div(numerator: Rational, denominator: Rational) -> Fraction | None:
         if numerator == 0 and denominator <= 0:
             return None
         return Fraction(numerator, denominator)
+        # TODO: I think this also needs a check to tell the algorithm to skip
+        # if the final column is strictly negative and the pivot column is
+        # zero or negative
     except ZeroDivisionError:
         # In this case, we want to ignore this row.  One possible solution
         # would be to return a special type here that signifies a division by

@@ -23,14 +23,16 @@ from .problemtabcontent import ProblemTabContent
 
 toplevel_logger = logging.getLogger(__name__)
 
+from .notifications.notificationurgency import NotificationUrgency
+
 failed_notification_backend_imports: set[str] = set()
 notification_senders = {
-    'null': lambda summary, body: 0
+    'null': lambda summary, body, urgency, id_to_replace = 0: 0
 }
 
 try:
     from .notifications import dbus
-    notification_senders['dbus'] = dbus.add_notification
+    notification_senders['dbus'] = dbus.simple_add_notification
 except ImportError:
     failed_notification_backend_imports.add('dbus')
 
@@ -103,7 +105,8 @@ class MainWindow(QMainWindow):
             self.settings.value('notifications/backend')
         ](
             'Optimisation failed',
-            'An exception occured in the simplex thread.  No results are available, but you may try again with different inputs.  See the program log or the console for more info.'
+            'An exception occured in the simplex thread.  No results are available, but you may try again with different inputs.  See the program log or the console for more info.',
+            NotificationUrgency.CRITICAL
         )
         MainWindow.logger.critical(
             "EXCEPTION IN SIMPLEX WORKER THREAD!  (this shouldn't happen)",
