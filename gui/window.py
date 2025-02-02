@@ -64,23 +64,6 @@ except ImportError:
     failed_notification_backend_imports.add('dbus')
 
 
-def make_form_subsection_header(
-    subsection_label: str,
-    button_label: str = 'Add'
-) -> tuple[QHBoxLayout, QPushButton]:
-    """Helper function to make the subsection header for a form"""
-    subsection_header_layout = QHBoxLayout()
-    subsection_header_layout.addWidget(QLabel(subsection_label))
-    subsection_header_button = QPushButton(button_label)
-    # make the button fill the space not occupied by the label
-    subsection_header_button.setSizePolicy(
-        QSizePolicy.Policy.MinimumExpanding,
-        QSizePolicy.Policy.Fixed
-    )
-    subsection_header_layout.addWidget(subsection_header_button)
-    return (subsection_header_layout, subsection_header_button)
-
-
 class MainWindow(QMainWindow):
     logger = toplevel_logger.getChild("MainWindow")
 
