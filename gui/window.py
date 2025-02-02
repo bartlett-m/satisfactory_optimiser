@@ -20,10 +20,9 @@ from .settingstabcontent import SettingsTabContent
 from .solutiontabcontent import SolutionTabContent
 from .problemtabcontent import ProblemTabContent
 
+from .notifications.notificationurgency import NotificationUrgency
 
 toplevel_logger = logging.getLogger(__name__)
-
-from .notifications.notificationurgency import NotificationUrgency
 
 failed_notification_backend_imports: set[str] = set()
 notification_senders = {
