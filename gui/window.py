@@ -1,53 +1,24 @@
-from fractions import Fraction
-from itertools import filterfalse
-import sys
 import logging
-# to log how long pivoting takes
-import time
 
-from PySide6.QtWidgets import (
-    QTabWidget,
-    QMainWindow,
-    QWidget,
-    QLabel,
-    QScrollArea,
-    QVBoxLayout,
-    QFormLayout,
-    QPushButton,
-    QSizePolicy,
-    QFrame,
-    QComboBox,
-    QHBoxLayout,
-    QDoubleSpinBox,
-    QGroupBox,
-    QApplication
+from PySide6.QtWidgets import QTabWidget, QMainWindow, QApplication
+from PySide6.QtCore import QThreadPool, QSettings
+
+from satisfactoryobjects.itemvariabletype import (
+    ItemVariableType,
+    ItemVariableTypes
 )
-from PySide6.QtCore import Qt, QThreadPool, QSettings
-
-from satisfactoryobjects.basesatisfactoryobject import BaseSatisfactoryObject
-from satisfactoryobjects.items import Item
-from satisfactoryobjects.itemvariabletype import ItemVariableType, ItemVariableTypes
-from satisfactoryobjects.lookuperrors import RecipeLookupError
-from satisfactoryobjects.recipelookup import lookup_recipes
-from satisfactoryobjects.resourceduplicatetypingsaver import resource_duplicate_typing_saver
 # CAUTION: these better have been populated by the time Target.__init__()
 # starts getting called or it will likely break
 from satisfactoryobjects.recipehandler import recipes
-from satisfactoryobjects.itemhandler import items
 
 from utils.directionenums import Direction
 from utils.variabletypetags import VariableType
 
-from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
-
 from .recipeusage import RecipeUsage
-from .constraints_widget import ConstraintsWidget, Constraint
 from .simplexworker import SimplexWorker
 from .settingstabcontent import SettingsTabContent
 from .solutiontabcontent import SolutionTabContent
 from .problemtabcontent import ProblemTabContent
-
-from optimisationsolver.simplex import Tableau, Inequality, ObjectiveEquation, Variable, SimplexAlgorithmDoneException
 
 
 toplevel_logger = logging.getLogger(__name__)
