@@ -460,5 +460,8 @@ class ProblemTabContent(QWidget):
         self.main_window_reference.simplex_worker_thread.signals.progress.connect(
             self.main_window_reference.process_simplex_progress
         )
+        self.main_window_reference.simplex_worker_thread.signals.error.connect(
+            self.main_window_reference.process_simplex_error
+        )
 
         self.main_window_reference.thread_pool.start(self.main_window_reference.simplex_worker_thread)

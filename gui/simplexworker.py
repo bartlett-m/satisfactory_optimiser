@@ -1,8 +1,20 @@
 import traceback
 import sys
+from enum import IntEnum
 
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject
 from optimisationsolver.simplex import Tableau, Inequality, SimplexAlgorithmDoneException
+
+
+class CancellationStatus(IntEnum):
+    # used when the program hasn't been cancelled
+    NOT_CANCELLED = 0
+    # used when the algorithm is cancelled for some reason that doesnt involve
+    # closing the program and thus we do not need to worry about use-after-free
+    NORMAL_CANELLATION = 1
+    # used when the program is exiting and thus Qt may have created a
+    # use-after-free for us if we try and use signals
+    ON_EXIT_CANCELLATION = 2
 
 # using code from
 # https://www.pythonguis.com/tutorials/multithreading-pyside6-applications-qthreadpool/
@@ -23,10 +35,14 @@ class SimplexWorker(QRunnable):
         super(SimplexWorker, self).__init__(*args, **kwargs)
         self.tableau = Tableau(problem)
         self.signals = SimplexWorkerSignals()
-        self.cancelled = False
+        self.cancelled = CancellationStatus.NOT_CANCELLED
 
-    def cancel_soon(self):
-        self.cancelled = True
+    def cancel_soon(self, on_exit_cancellation: bool = False):
+        self.cancelled = (
+            CancellationStatus.ON_EXIT_CANCELLATION
+            if on_exit_cancellation
+            else CancellationStatus.NORMAL_CANELLATION
+        )
 
     @Slot()
     def run(self):
@@ -57,21 +73,28 @@ class SimplexWorker(QRunnable):
                     # my shell or vscode (both of which display an icon if a
                     # comand had a non-zero return code) since it is a crash
                     # in the thread rather than in the main program.
-                    self.signals.progress.emit(pivot_count)
+                    if self.cancelled != CancellationStatus.ON_EXIT_CANCELLATION:
+                        self.signals.progress.emit(pivot_count)
+                        # testing
+                        if pivot_count == 10:
+                            raise ValueError('testing exception handler')
             except SimplexAlgorithmDoneException:
                 pass
-            if self.cancelled:
+            if self.cancelled == CancellationStatus.NORMAL_CANELLATION:
                 self.signals.finished.emit()
+            if self.cancelled:
                 return
             result = self.tableau.get_variable_values()
         # equivalent to bare except but doesn't trigger flake8
         except BaseException:
             traceback.print_exc()
-            exception_type, exception_value = sys.exc_info()[:2]
-            self.signals.error.emit(
-                (exception_type, exception_value, traceback.format_exc())
-            )
+            if self.cancelled != CancellationStatus.ON_EXIT_CANCELLATION:
+                self.signals.error.emit(
+                    sys.exc_info()
+                )
         else:
-            self.signals.result.emit(result)
+            if not self.cancelled:
+                self.signals.result.emit(result)
         finally:
-            self.signals.finished.emit()
+            if self.cancelled != CancellationStatus.ON_EXIT_CANCELLATION:
+                self.signals.finished.emit()

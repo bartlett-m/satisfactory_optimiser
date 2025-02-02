@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.simplex_worker_thread is not None:
-            self.simplex_worker_thread.cancel_soon()
+            self.simplex_worker_thread.cancel_soon(True)
         return super().closeEvent(event)
 
     def process_simplex_progress(self, progress: int):
@@ -97,13 +97,25 @@ class MainWindow(QMainWindow):
         # and dont send the notification if it got set.
         self.simplex_worker_thread = None
         self.problem_tab_content_widget.setDisabled(False)
+
+    def process_simplex_error(self, error_data: tuple):
+        notification_senders[
+            self.settings.value('notifications/backend')
+        ](
+            'Optimisation failed',
+            'An exception occured in the simplex thread.  No results are available, but you may try again with different inputs.  See the program log or the console for more info.'
+        )
+        MainWindow.logger.critical(
+            "EXCEPTION IN SIMPLEX WORKER THREAD!  (this shouldn't happen)",
+            exc_info=error_data
+        )
+
+    def process_simplex_result(self, result: list):
         notification_senders[
             self.settings.value('notifications/backend')
         ](
             'Optimisation complete', 'View the results in the Solution tab'
         )
-
-    def process_simplex_result(self, result: list):
         # TODO: this could easily go into the solution tab content widget file
         total_power_usage = float()
         for var_id, var_val in result:
