@@ -36,6 +36,27 @@ class SimplexWorker(QRunnable):
                 while not self.cancelled:
                     self.tableau.pivot()
                     pivot_count += 1
+                    # This turns out to have a race condition: if the GUI is
+                    # quit the C++ representation of the SimplexWorkerSignals
+                    # object that Qt uses may get deleted before cancellation
+                    # is checked for.  This causes a RuntimeError to be raised.
+                    # So far, I have only run into this once.
+                    # Once the RuntimeError is raised, it gets caught by the
+                    # outer try-except block.  As part of this, an error
+                    # signal is emitted with details about the error.  However,
+                    # this then causes a second RuntimeError to occur for the
+                    # same reason.
+                    # Since the outer try-except block has a finally block
+                    # attached to it, further code runs even though an error
+                    # occurs in the except block.  Because the finally block
+                    # also emits a signal (to inform the main thread that the
+                    # algorithm has terminated and the problem region can be
+                    # re-enabled, even if the algorithm crashed for some
+                    # reason) a third RuntimeError gets raised.  The thread
+                    # then crashes.  This does not get picked up as a crash by
+                    # my shell or vscode (both of which display an icon if a
+                    # comand had a non-zero return code) since it is a crash
+                    # in the thread rather than in the main program.
                     self.signals.progress.emit(pivot_count)
             except SimplexAlgorithmDoneException:
                 pass
