@@ -75,9 +75,6 @@ class SimplexWorker(QRunnable):
                     # in the thread rather than in the main program.
                     if self.cancelled != CancellationStatus.ON_EXIT_CANCELLATION:
                         self.signals.progress.emit(pivot_count)
-                        # testing
-                        if pivot_count == 10:
-                            raise ValueError('testing exception handler')
             except SimplexAlgorithmDoneException:
                 pass
             if self.cancelled == CancellationStatus.NORMAL_CANELLATION:
