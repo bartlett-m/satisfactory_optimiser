@@ -1,6 +1,11 @@
 import logging
 
-from PySide6.QtWidgets import QTabWidget, QMainWindow, QApplication
+from PySide6.QtWidgets import (
+    QTabWidget,
+    QMainWindow,
+    QApplication,
+    QProgressDialog
+)
 from PySide6.QtCore import QThreadPool, QSettings
 
 from satisfactoryobjects.itemvariabletype import (
@@ -84,6 +89,11 @@ class MainWindow(QMainWindow):
             f'{self.thread_pool.maxThreadCount()}'
             ' threads.'
         )
+
+        # test
+        pd = QProgressDialog('test', 'Cancel', 0, 0, self)
+        pd.setMinimumDuration(0)
+        pd.setValue(1)
 
     def closeEvent(self, event):
         if self.simplex_worker_thread is not None:
