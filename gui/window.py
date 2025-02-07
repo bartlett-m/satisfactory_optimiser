@@ -3,8 +3,7 @@ import logging
 from PySide6.QtWidgets import (
     QTabWidget,
     QMainWindow,
-    QApplication,
-    QProgressDialog
+    QApplication
 )
 from PySide6.QtCore import QThreadPool, QSettings
 
@@ -24,6 +23,7 @@ from .simplexworker import SimplexWorker
 from .settingstabcontent import SettingsTabContent
 from .solutiontabcontent import SolutionTabContent
 from .problemtabcontent import ProblemTabContent
+from .customprogressdialog import CustomProgressDialog
 
 from .notifications.notificationurgency import NotificationUrgency
 
@@ -91,9 +91,11 @@ class MainWindow(QMainWindow):
         )
 
         # test
-        pd = QProgressDialog('test', 'Cancel', 0, 0, self)
-        pd.setMinimumDuration(0)
-        pd.setValue(1)
+        # note that this has to be in the self namespace so that it doesnt get
+        # deleted when the constructor goes out of scope (which causes it to
+        # never be rendered)
+        self.pd = CustomProgressDialog()
+        self.pd.show()
 
     def closeEvent(self, event):
         if self.simplex_worker_thread is not None:
