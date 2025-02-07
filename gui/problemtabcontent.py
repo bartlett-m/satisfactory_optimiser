@@ -1,5 +1,6 @@
 import logging
 from fractions import Fraction
+from itertools import chain
 # prevent circular import at runtime but still allow for MainWindow type hint
 # static type checkers interpret this constant as True, but it is False at
 # runtime
@@ -45,6 +46,7 @@ from satisfactoryobjects.resourceduplicatetypingsaver import resource_duplicate_
 # CAUTION: these better have been populated already, or things will definitely
 # break
 from satisfactoryobjects.itemhandler import items
+from satisfactoryobjects.recipehandler import recipes
 from satisfactoryobjects.recipelookup import lookup_recipes
 
 
@@ -402,7 +404,12 @@ class ProblemTabContent(QWidget):
 
         # add the constraints for the recipes
         for resource in items.values():
-            constraint_variables: list[Variable] = [Variable(ItemVariableType(resource, ItemVariableTypes.TOTAL), -1)]
+            constraint_variables: list[Variable] = [
+                Variable(
+                    ItemVariableType(resource, ItemVariableTypes.TOTAL),
+                    -1
+                )
+            ]
             if resource in target_items:
                 # also TODO: put this in the try block somehow, and if the except block is triggered when this condition is met then swap the variable in the objective equation to be of the TOTAL type instead of the OUTPUT type, to keep the tableau smaller
                 constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.OUTPUT), 1))
@@ -441,12 +448,42 @@ class ProblemTabContent(QWidget):
                         Inequality(constraint_variables, 0)
                     )
 
+        power_usage_weight = self.power_usage_spin_box.value()
+
+        recipe_weight_vars: list[Variable] = list()
+
+        for recipe in recipes.values():
+            # could turn this into a list comprehension but if more weights
+            # are added (e.g. approximate number of machines) then it would
+            # rapidly become unreadable
+            recipe_power_weight = (
+                recipe.calc_power_flow_rate(positive_direction=Direction.OUT)
+                *
+                power_usage_weight
+            )
+
+            recipe_weight_vars.append(
+                Variable(
+                    recipe.internal_class_identifier,
+                    Fraction(recipe_power_weight)
+                )
+            )
+
         # add the objectives and their weights
-        problem_constraints.append(ObjectiveEquation([
-            Variable(ItemVariableType(items[target_weight[0]], ItemVariableTypes.OUTPUT), target_weight[1] * -1)
-            for target_weight
-            in target_weights
-        ]))
+        problem_constraints.append(ObjectiveEquation(chain(
+            [
+                Variable(
+                    ItemVariableType(
+                        items[target_weight[0]],
+                        ItemVariableTypes.OUTPUT
+                    ),
+                    target_weight[1] * -1
+                )
+                for target_weight
+                in target_weights
+            ],
+            recipe_weight_vars
+        )))
 
         # print(len(problem_constraints))
 

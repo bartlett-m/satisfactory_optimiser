@@ -3,7 +3,11 @@ import sys
 from enum import IntEnum
 
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject
-from optimisationsolver.simplex import Tableau, Inequality, SimplexAlgorithmDoneException
+from optimisationsolver.simplex import (
+    Tableau,
+    Inequality,
+    SimplexAlgorithmDoneException
+)
 
 
 class CancellationStatus(IntEnum):
@@ -77,6 +81,10 @@ class SimplexWorker(QRunnable):
                         self.signals.progress.emit(pivot_count)
             except SimplexAlgorithmDoneException:
                 pass
+            except ValueError:  # temp
+                print('TRAP!')
+                pass  # this actually seems to work - when the program crashes with this error it actually seems to have a solution (that also looks pretty optimal)
+                # for some cases (ai expansion server with hash randomisation off) this doesnt get triggered though interestingly
             if self.cancelled == CancellationStatus.NORMAL_CANELLATION:
                 self.signals.finished.emit()
             if self.cancelled:
