@@ -32,6 +32,10 @@ class CustomProgressDialog(QWidget):
 
         self.setLayout(layout)
 
+        # used to tell the difference between closes initiated by the main
+        # application and closes initiated by the user
+        self.application_is_closing_flag = False
+
     def set_pivots(self, n_pivots: int) -> None:
         partial_str: str = None
         if n_pivots == 1:
@@ -43,3 +47,15 @@ class CustomProgressDialog(QWidget):
         self.progress_label.setText(
             partial_str + ' completed.'
         )
+
+    def cleanup_on_application_close(self):
+        self.application_is_closing_flag = True
+        self.close()
+
+    def closeEvent(self, event):
+        if self.application_is_closing_flag:
+            return super().closeEvent(event)
+        else:
+            # prevent the user from closing this (they should instead click
+            # cancel)
+            event.ignore()

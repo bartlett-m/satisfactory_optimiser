@@ -99,13 +99,10 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         if self.simplex_worker_thread is not None:
             self.simplex_worker_thread.cancel_soon(True)
-        self.progress_dialog.close()
+        self.progress_dialog.cleanup_on_application_close()
         return super().closeEvent(event)
 
     def process_simplex_progress(self, progress: int):
-        # This is currently just to test that the same dialog can be reopened
-        # if closed by the user.
-        self.progress_dialog.show()
         self.progress_dialog.set_pivots(progress)
 
     def process_simplex_terminate(self):
