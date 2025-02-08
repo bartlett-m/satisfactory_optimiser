@@ -90,26 +90,28 @@ class MainWindow(QMainWindow):
             ' threads.'
         )
 
-        # test
+        # Progress dialog
         # note that this has to be in the self namespace so that it doesnt get
         # deleted when the constructor goes out of scope (which causes it to
         # never be rendered)
-        self.pd = CustomProgressDialog()
-        self.pd.show()
+        self.progress_dialog = CustomProgressDialog()
 
     def closeEvent(self, event):
         if self.simplex_worker_thread is not None:
             self.simplex_worker_thread.cancel_soon(True)
+        self.progress_dialog.close()
         return super().closeEvent(event)
 
     def process_simplex_progress(self, progress: int):
-        print(f'Have completed {progress} pivots')
+        # This is currently just to test that the same dialog can be reopened
+        # if closed by the user.
+        self.progress_dialog.show()
+        self.progress_dialog.set_pivots(progress)
 
     def process_simplex_terminate(self):
-        # TODO: have a flag that is set when closeEvent is fired,
-        # and dont send the notification if it got set.
         self.simplex_worker_thread = None
         self.problem_tab_content_widget.setDisabled(False)
+        self.progress_dialog.hide()
 
     def process_simplex_error(self, error_data: tuple):
         notification_senders[
