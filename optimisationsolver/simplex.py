@@ -375,17 +375,17 @@ class Tableau():
             self._tableau.append(TableauRow(_row))
 
     def _get_pivot_column(self) -> int:
-        # # get the objective row and find the value of the most negative entry
-        # most_neg = self._tableau[-1].min()
-        # # if there are no negative entries in the objective row, then the
-        # # algorithm is complete
-        # if most_neg >= 0:
-        #     raise SimplexAlgorithmDoneException()
-        # # otherwise, get the index of this value.  this is the pivot column.
-        # return self._tableau[-1].index(most_neg)
-        # # note that the algorithm will work with any negative entry in the
-        # # objective row, however it is more optimal to use the most negative
-        # # entry.
+        # get the objective row and find the value of the most negative entry
+        most_neg = self._tableau[-1].min()
+        # if there are no negative entries in the objective row, then the
+        # algorithm is complete
+        if most_neg >= 0:
+            raise SimplexAlgorithmDoneException()
+        # otherwise, get the index of this value.  this is the pivot column.
+        return self._tableau[-1].index(most_neg)
+        # note that the algorithm will work with any negative entry in the
+        # objective row, however it is more optimal to use the most negative
+        # entry.
 
         # hacky patch to try and make it not cycle by using blands rule
         for column, entry in enumerate(self._tableau[-1]._row):
