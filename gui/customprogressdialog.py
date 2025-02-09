@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QProgressBar, QHBoxLayout, QVBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QWidget, QProgressBar, QVBoxLayout, QLabel, QPushButton
 from PySide6.QtCore import Qt
 
 
@@ -16,6 +16,11 @@ class CustomProgressDialog(QWidget):
         super(CustomProgressDialog, self).__init__(*args, **kwargs)
 
         self.setWindowTitle('Satisfactory Optimiser')
+
+        # this is a dialog
+        self.setWindowFlag(Qt.WindowType.Dialog, True)
+        # only way to get swaywm to automatically make it floating
+        self.setFixedSize(350, 120)
 
         layout = QVBoxLayout()
 
