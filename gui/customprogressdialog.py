@@ -12,7 +12,7 @@ from PySide6.QtCore import Qt
 # QWindow is intended for direct use with OpenGL or similar patterns when it
 # is not used internally.
 class CustomProgressDialog(QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, external_cancellation_callback, *args, **kwargs):
         super(CustomProgressDialog, self).__init__(*args, **kwargs)
 
         self.setWindowTitle('Satisfactory Optimiser')
@@ -36,6 +36,8 @@ class CustomProgressDialog(QWidget):
         # used to tell the difference between closes initiated by the main
         # application and closes initiated by the user
         self.application_is_closing_flag = False
+        # called by the cancel button callback
+        self.external_cancellation_callback = external_cancellation_callback
 
     def set_pivots(self, n_pivots: int) -> None:
         partial_str: str = None
@@ -62,5 +64,4 @@ class CustomProgressDialog(QWidget):
             event.ignore()
 
     def cancel_button_callback(self):
-        # TODO: do something more useful here
-        print('cancelled')
+        self.external_cancellation_callback()

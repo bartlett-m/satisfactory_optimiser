@@ -94,13 +94,18 @@ class MainWindow(QMainWindow):
         # note that this has to be in the self namespace so that it doesnt get
         # deleted when the constructor goes out of scope (which causes it to
         # never be rendered)
-        self.progress_dialog = CustomProgressDialog()
+        self.progress_dialog = CustomProgressDialog(
+            self.handle_cancellation_request
+        )
 
     def closeEvent(self, event):
         if self.simplex_worker_thread is not None:
             self.simplex_worker_thread.cancel_soon(True)
         self.progress_dialog.cleanup_on_application_close()
         return super().closeEvent(event)
+
+    def handle_cancellation_request(self):
+        print('cancelled')
 
     def process_simplex_progress(self, progress: int):
         self.progress_dialog.set_pivots(progress)
