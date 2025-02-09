@@ -261,7 +261,7 @@ class ProblemTabContent(QWidget):
         ]:
             weight_setting_spin_box.setRange(
                 float("-inf"),
-                float("inf")
+                0
             )
             weight_setting_spin_box.setDecimals(
                 SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
