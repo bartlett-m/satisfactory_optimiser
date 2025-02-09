@@ -1,6 +1,7 @@
 import json
 import logging
 import pathlib
+import os
 import sys
 
 # PySide6 dependency here to parse arguments
@@ -301,6 +302,55 @@ def main(
 
 
 if __name__ == '__main__':
+    # make the program deterministic
+    # cannot have logging yet since we are substituting the entire process
+    # without cleaning up file handles etc
+    if sys.flags.hash_randomization:
+        try:
+            if os.environ[
+                'io.github.bartlett-m.INTERNALEXPECTHASHRANDOMISATIONOFF'
+            ] == '1':
+                print(
+                    'Hash randomisation should have been automatically disabled, but it is not!'
+                )
+                print(
+                    'Please relaunch the program without giving python the -R argument!'
+                )
+            else:
+                print(
+                    'Internal environment variable used for state has corrupt value!'
+                )
+                print(
+                    'Please unset the following environment variable:'
+                )
+                print(
+                    'io.github.bartlett-m.INTERNALEXPECTHASHRANDOMISATIONOFF'
+                )
+            print('CRITICAL EARLY ERROR, CANNOT CONTINUE')
+            print('HASH_RANDOMISATION_DISABLEMENT_FAILED')
+            # if we got to this line, this internal environment variable was
+            # either already set outside the program or python was started
+            # with -R
+            sys.exit(78)
+        except KeyError:
+            # not set, as expected
+            pass
+        # turn off hash randomisation
+        os.environ['PYTHONHASHSEED'] = '0'
+        # tell the program to expect hash randomisation to be turned off (so we
+        # dont enter an infinite loop if python was started with -R, which
+        # overrides the environment variable)
+        os.environ[
+            'io.github.bartlett-m.INTERNALEXPECTHASHRANDOMISATIONOFF'
+        ] = '1'
+        # The first item from argv is discarded by python3 (since it is normally
+        # the interpreter executable).  However, with os.execvp, the args
+        # specified are the entire argv, and thus it is possible to start python3
+        # without the interpreter executable being in argv.  Python does not
+        # expect this and will then discard our script path.  To fix this, we must
+        # pass the entire original argv as the arguments.
+        os.execvp(sys.orig_argv[0], sys.orig_argv)
+
     app = QApplication(sys.argv)
     app.setApplicationName('Satisfactory Optimiser')
     app.setApplicationVersion('1.0.0')
