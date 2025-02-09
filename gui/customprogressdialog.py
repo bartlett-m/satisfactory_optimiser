@@ -28,6 +28,7 @@ class CustomProgressDialog(QWidget):
         self.progress_bar.setRange(0, 0)
         layout.addWidget(self.progress_bar)
         self.cancel_button = QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.cancel_button_callback)
         layout.addWidget(self.cancel_button, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.setLayout(layout)
@@ -59,3 +60,7 @@ class CustomProgressDialog(QWidget):
             # prevent the user from closing this (they should instead click
             # cancel)
             event.ignore()
+
+    def cancel_button_callback(self):
+        # TODO: do something more useful here
+        print('cancelled')
