@@ -22,7 +22,8 @@ class CustomProgressDialog(QWidget):
         layout.addWidget(QLabel('Running optimisation'))
         layout.addStretch(1)
         self.progress_label = QLabel()
-        self.set_pivots(0)
+        # the text in the progress label will get set later so dont bother
+        # setting it yet anymore
         layout.addWidget(self.progress_label)
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 0)
@@ -50,6 +51,10 @@ class CustomProgressDialog(QWidget):
         self.progress_label.setText(
             partial_str + ' completed.'
         )
+
+    def reset_and_show(self):
+        self.set_pivots(0)
+        self.show()
 
     def cleanup_on_application_close(self):
         self.application_is_closing_flag = True

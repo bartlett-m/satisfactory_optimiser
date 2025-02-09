@@ -327,7 +327,7 @@ class ProblemTabContent(QWidget):
         # for the documentation on this.
         self.main_window_reference.qt_application_reference.processEvents()
 
-        self.main_window_reference.progress_dialog.show()
+        self.main_window_reference.progress_dialog.reset_and_show()
 
         target_weights: list[tuple[str, float]] = self.targets_widget.get_constraints()
         # used to more quickly filter what items need output "virtual recipes"
