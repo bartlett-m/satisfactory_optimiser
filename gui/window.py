@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         return super().closeEvent(event)
 
     def handle_cancellation_request(self):
-        print('cancelled')
+        self.simplex_worker_thread.cancel_soon(False)
 
     def process_simplex_progress(self, progress: int):
         self.progress_dialog.set_pivots(progress)
@@ -113,6 +113,9 @@ class MainWindow(QMainWindow):
     def process_simplex_terminate(self):
         self.simplex_worker_thread = None
         self.problem_tab_content_widget.setDisabled(False)
+        # TODO: also need to reset the progress (unless I do that when setting
+        # up the simplex algorithm)
+        # could be done with a new instance method of the class
         self.progress_dialog.hide()
 
     def process_simplex_error(self, error_data: tuple):
