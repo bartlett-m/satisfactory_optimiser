@@ -35,13 +35,15 @@ class Recipe(BaseSatisfactoryObject):
         products: list[RecipeResource],
         machines: list[Machine],
         time_: float,
-        average_power_consumption: float = 0.0
+        average_power_consumption: float = 0.0,
+        is_alternate: bool = False
     ) -> None:
         super().__init__(internal_class_identifier, user_facing_name)
         self.dependencies = dependencies
         self.products = products
         self.machines = machines
         self.time_ = time_
+        self.is_alternate = is_alternate
         # CAUTION: THIS IS JUNK WHEN NOT IN A VARIABLE POWER MACHINE
         # HENCE WHY ITS PRIVATE.
         # USE THE calcPowerFlowRate() FUNCTION INSTEAD
@@ -251,6 +253,7 @@ class Recipe(BaseSatisfactoryObject):
                     ==
                     other.__average_power_consumption
                 )
+                and self.is_alternate == other.is_alternate
             )
         return False
 
