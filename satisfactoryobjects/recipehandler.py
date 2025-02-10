@@ -1,5 +1,6 @@
 import logging
 
+from .checkifrecipealternate import check_if_recipe_alternate
 from .recipes import Recipe
 from .lookuperrors import ItemLookupError, MachineLookupError
 
@@ -38,7 +39,10 @@ def handler(obj):
                 # it could be that the factor is the range and the constant
                 # is the minimum, or it could be that the constant is half the
                 # range and the factor is the average
-                float(_class["mVariablePowerConsumptionFactor"])
+                float(_class["mVariablePowerConsumptionFactor"]),
+                is_alternate=check_if_recipe_alternate(
+                    _class['FullName']
+                )
             )
         except ItemLookupError:
             toplevel_logger.error(
