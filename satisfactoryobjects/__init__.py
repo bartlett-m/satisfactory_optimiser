@@ -10,5 +10,6 @@ __all__ = [
         "lookuperrors",
         "recipelookup",
         "itemvariabletype",
-        "resourceduplicatetypingsaver"
+        "resourceduplicatetypingsaver",
+        "checkifrecipealternate"
     ]
