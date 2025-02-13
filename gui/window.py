@@ -39,6 +39,11 @@ try:
     notification_senders['dbus'] = dbus.simple_add_notification
 except ImportError:
     failed_notification_backend_imports.add('dbus')
+try:
+    from .notifications import plyer
+    notification_senders['plyer'] = plyer.simple_add_notification
+except ImportError:
+    failed_notification_backend_imports.add('plyer')
 
 
 class MainWindow(QMainWindow):

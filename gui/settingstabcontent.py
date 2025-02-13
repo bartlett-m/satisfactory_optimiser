@@ -58,7 +58,9 @@ class SettingsTabContent(QWidget):
             error_dialog = QMessageBox(
                 QMessageBox.Icon.Critical,
                 'Configuration problem',
-                'The selected notification backend failed to load.  Restore default setting for notifications and continue, or quit program for troubleshooting?',
+                'The selected notification backend failed to load.  Restore '
+                'default setting for notifications and continue, or quit '
+                'program for troubleshooting?',
                 QMessageBox.StandardButton.RestoreDefaults | QMessageBox.StandardButton.Abort
             )
             response = error_dialog.exec()
@@ -76,7 +78,15 @@ class SettingsTabContent(QWidget):
         # define the radio buttons for the notification backend
         self.notification_backend_buttons = {
             'null': (QRadioButton('None'), 'Do not send notifications'),
-            'dbus': (QRadioButton('D-Bus'), 'Used on Un*x and Un*x-like systems')
+            'dbus': (
+                QRadioButton('D-Bus'),
+                'Used on Un*x and Un*x-like systems'
+            ),
+            'plyer': (
+                QRadioButton('Plyer'),
+                'Cross-platform but doesnt support some features.  Consider '
+                'using a platform-specific backend if one is available.'
+            )
         }
 
         for button_setting_id, button_tuple in self.notification_backend_buttons.items():
@@ -84,11 +94,16 @@ class SettingsTabContent(QWidget):
             if button_setting_id in failed_notification_backend_imports:
                 button_tuple[0].setDisabled(True)
 
+        # TODO: make self.notification_backend_buttons an OrderedDict or
+        # something so this can be in a loop
         notification_backend_select_layout.addWidget(
             self.notification_backend_buttons['null'][0]
         )
         notification_backend_select_layout.addWidget(
             self.notification_backend_buttons['dbus'][0]
+        )
+        notification_backend_select_layout.addWidget(
+            self.notification_backend_buttons['plyer'][0]
         )
 
         form_layout.addRow('Notification backend:', notification_backend_select_layout)
@@ -101,10 +116,14 @@ class SettingsTabContent(QWidget):
 
         # apply/cancel buttons
         apply_button = QPushButton('Apply')
-        apply_button.setToolTip('Apply new settings to program and write to file on disk')
+        apply_button.setToolTip(
+            'Apply new settings to program and write to file on disk'
+        )
         apply_button.clicked.connect(self.write_settings)
         cancel_button = QPushButton('Cancel')
-        cancel_button.setToolTip('Discard changes made to settings and reload from file on disk')
+        cancel_button.setToolTip(
+            'Discard changes made to settings and reload from file on disk'
+        )
         cancel_button.clicked.connect(self.reload_settings)
         button_layout = QHBoxLayout()
         button_layout.addWidget(cancel_button)
