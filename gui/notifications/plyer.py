@@ -1,7 +1,5 @@
-from plyer.facades import Notification
+from plyer import notification
 from .notificationurgency import NotificationUrgency
-
-_facade = Notification()
 
 
 def simple_add_notification(
@@ -12,6 +10,6 @@ def simple_add_notification(
 ) -> int:
     # Plyer does not support notification overwrite and its dbus hits api is
     # not well documented, as well as being Linux-specific
-    _facade.notify(summary, body)
+    notification.notify(summary, body)
 
     return 0
