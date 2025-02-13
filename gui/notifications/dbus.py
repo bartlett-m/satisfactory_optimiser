@@ -37,7 +37,13 @@ def convert_notification_urgency(urgency: NotificationUrgency) -> dbus.Byte:
 
 # when called, returns the id of the notification to allow it to be overwritten
 # cannot effectively use functools.partial due to the awkward order of the arguments of the original
-def add_notification(summary: str, body: str = '', hints: dict = {'urgency': DbusNotificationUrgency.NORMAL.value}, timeout: int = -1, id: int = 0) -> int:
+def add_notification(
+    summary: str,
+    body: str = '',
+    hints: dict = {'urgency': DbusNotificationUrgency.NORMAL.value},
+    timeout: int = -1,
+    id: int = 0
+) -> int:
     return _add_notification(
         id,  # id of notification to replace, or 0
         '',  # would be app icon
@@ -49,7 +55,12 @@ def add_notification(summary: str, body: str = '', hints: dict = {'urgency': Dbu
     )
 
 
-def simple_add_notification(summary: str, body: str = '', urgency: NotificationUrgency = NotificationUrgency.NORMAL, id_to_replace: int = 0) -> int:
+def simple_add_notification(
+    summary: str,
+    body: str = '',
+    urgency: NotificationUrgency = NotificationUrgency.NORMAL,
+    id_to_replace: int = 0
+) -> int:
     return add_notification(
         summary,
         body,
