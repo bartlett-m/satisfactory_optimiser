@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGroupBox
+from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGridLayout, QGroupBox
 
 from satisfactoryobjects.recipes import Recipe
 # CAUTION: these better have been populated already, or things will definitely
@@ -6,7 +6,7 @@ from satisfactoryobjects.recipes import Recipe
 from satisfactoryobjects.recipehandler import recipes
 
 
-class RecipeSelector(QHBoxLayout):
+class RecipeSelector(QGridLayout):
     def __init__(
         self,
         *args,
@@ -44,6 +44,12 @@ class RecipeSelector(QHBoxLayout):
             ).addRow(
                 id_recipe_tuple[1].user_facing_name, checkbox
             )
+            # default config: enable all the default recipes (since these are
+            # automatically available) but disable all the alternate recipes
+            # (since these are unlocked individually and randomly by scanning
+            # hard drives)
+            checkbox.setChecked(not id_recipe_tuple[1].is_alternate)
+            # will modify to be backed by something in the config
 
             # self.addRow(id_recipe_tuple[1].user_facing_name, checkbox)
             self.recipe_checkboxes[id_recipe_tuple[0]] = checkbox
@@ -53,4 +59,6 @@ class RecipeSelector(QHBoxLayout):
             (alternate_group_box, alternate_form)
         ):
             group_box.setLayout(form)
-            self.addWidget(group_box)
+
+        self.addWidget(normal_group_box, 1, 0)
+        self.addWidget(alternate_group_box, 1, 1)
