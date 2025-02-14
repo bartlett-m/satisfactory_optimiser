@@ -8,10 +8,19 @@ from .lookuperrors import RecipeLookupError
 toplevel_logger = logging.getLogger(__name__)
 
 
-def lookup_recipes(target_item: Item, lookup_consuming_recipes: bool = False) -> list[Recipe]:
+def lookup_recipes(
+    target_item: Item,
+    lookup_consuming_recipes: bool = False,
+    # set would make more sense - if Recipe were hashable.
+    disabled_recipes: list[Recipe] = []
+) -> list[Recipe]:
     _ret: list[Recipe] = list()
 
     for recipe in recipes.values():
+        if recipe in disabled_recipes:
+            # could have some handler to give a more meaningful error if no
+            # enabled recipes produce the resource, but this will function
+            continue
         for resource in (
             recipe.dependencies
             if lookup_consuming_recipes
