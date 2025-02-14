@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from .config_constants import SUPPOSEDLY_UNLIMITED_DOUBLE_SPINBOX_MAX_DECIMALS
 from .constraints_widget import ConstraintsWidget, Constraint
 from .simplexworker import SimplexWorker
+from .recipeselector import RecipeSelector
 
 if TYPE_CHECKING:
     # only used for type hint, so does not need to be imported at runtime
@@ -273,6 +274,8 @@ class ProblemTabContent(QWidget):
         # get a more consistent look with the margins
         form_layout.addLayout(self.weightings_form)
 
+        form_layout.addLayout(RecipeSelector())
+
         # put the layout container widget in the scroll area
         form_container.setWidget(form_layout_container)
 
@@ -455,6 +458,9 @@ class ProblemTabContent(QWidget):
         recipe_weight_vars: list[Variable] = list()
 
         for recipe in recipes.values():
+            # TODO: this will need a separate mechanism to exclude the
+            # disabled recipes
+
             # could turn this into a list comprehension but if more weights
             # are added (e.g. approximate number of machines) then it would
             # rapidly become unreadable
