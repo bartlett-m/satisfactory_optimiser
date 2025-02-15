@@ -31,6 +31,12 @@ class RecipeSelector(QGridLayout):
         #self.recipe_selection_persistence_obj.setValue('recipes/alternate/TEST_EXAMPLE', 1)
 
         self.profile_name_combo_box = QComboBox()
+        self.profile_name_combo_box.addItem('default')
+        # TODO: have the 'default' profile not be saveable over.  have a
+        # 'user-default' profile that is used instead for this.  if this
+        # profile exists, select this by default.  otherwise, load 'default'
+        # (dynamically created at runtime as all normal recipes, no alternate
+        # recipes)
         self.profile_name_combo_box.setEditable(True)
 
         self.load_profile_button = QPushButton('Load')
@@ -93,6 +99,8 @@ class RecipeSelector(QGridLayout):
             # hard drives)
             checkbox.setChecked(not id_recipe_tuple[1].is_alternate)
             # will modify to be backed by something in the config
+            # TODO: above setChecked is effectively redundant as it would be
+            # easier to just load the default profile
 
             checkbox.checkStateChanged.connect(
                 partial(
@@ -153,7 +161,7 @@ class RecipeSelector(QGridLayout):
         profile_name = self.profile_name_combo_box.currentText()
         if self.recipe_selection_persistence_obj.value(
             'profile-' + profile_name + '/is-legit'
-        ) != 'yes':
+        ) != 'yes' and profile_name != 'default':
             # error: trying to load non-existent profile
             # TODO: special handling for default profile if not exists i.e.
             # create it
@@ -170,7 +178,7 @@ class RecipeSelector(QGridLayout):
         else:
             self.normal_recipes_active, self.alternate_recipes_active = 0, 0
             for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
-                is_alternate = recipes[recipe_id].is_alternate
+                is_alternate = recipe_id in self.alternate_recipe_identifiers
                 check_state = self.recipe_selection_persistence_obj.value(
                     'profile-' + profile_name + '/recipes/' +
                     ('alternate' if is_alternate else 'normal')
@@ -186,9 +194,9 @@ class RecipeSelector(QGridLayout):
                     recipe_checkbox.setChecked(False)
                 else:
                     # load default
-                    recipe_checkbox.setChecked(is_alternate)
-                    if is_alternate:
-                        self.alternate_recipes_active += 1
+                    recipe_checkbox.setChecked(not is_alternate)
+                    if not is_alternate:
+                        self.normal_recipes_active += 1
             if self.normal_recipes_active == self.normal_recipes_available:
                 self.all_normal_recipe_checkbox.setChecked(True)
                 self.all_normal_recipe_checkbox.setTristate(False)
