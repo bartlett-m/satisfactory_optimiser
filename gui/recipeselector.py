@@ -1,7 +1,7 @@
 from functools import partial
 
-from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGridLayout, QGroupBox
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QComboBox, QPushButton
+from PySide6.QtCore import Qt, QSettings
 
 from satisfactoryobjects.recipes import Recipe
 # CAUTION: these better have been populated already, or things will definitely
@@ -16,14 +16,35 @@ class RecipeSelector(QGridLayout):
         **kwargs
     ):
         super(RecipeSelector, self).__init__(*args, **kwargs)
+
+        # ini settings are separate from the regular settings and are
+        # guaranteed to be able to store large amounts of data in a single key
+        # e.g. store an entire list (unlike the native format which may not be
+        # able to e.g. on Windows where its a registry key)
+        self.recipe_selection_persistence_obj = QSettings(
+            QSettings.Format.IniFormat,
+            QSettings.Scope.UserScope,
+            'bartlett-m',
+            'Satisfactory Optimiser'
+        )
+
+        #self.recipe_selection_persistence_obj.setValue('recipes/alternate/TEST_EXAMPLE', 1)
+
+        self.profile_name_combo_box = QComboBox()
+        self.profile_name_combo_box.setEditable(True)
+
+        self.load_profile_button = QPushButton('Load')
+        self.save_profile_button = QPushButton('💾 Save')
+        self.delete_profile_button = QPushButton('🗑 Delete')
+
         self.recipe_checkboxes: dict[str, QCheckBox] = dict()
         self.all_normal_recipe_checkbox = QCheckBox('All normal')
         self.all_alternate_recipe_checkbox = QCheckBox('All alternate')
-        for checkbox in (
-            self.all_normal_recipe_checkbox,
-            self.all_alternate_recipe_checkbox
-        ):
-            checkbox.setTristate(True)
+        #for checkbox in (
+        #    self.all_normal_recipe_checkbox,
+        #    self.all_alternate_recipe_checkbox
+        #):
+        #    checkbox.setTristate(True)
         normal_group_box = QGroupBox('Normal')
         normal_form = QFormLayout()
         alternate_group_box = QGroupBox('Alternate')
@@ -95,10 +116,14 @@ class RecipeSelector(QGridLayout):
         ):
             group_box.setLayout(form)
 
-        self.addWidget(self.all_normal_recipe_checkbox, 0, 0)
-        self.addWidget(self.all_alternate_recipe_checkbox, 0, 1)
-        self.addWidget(normal_group_box, 1, 0)
-        self.addWidget(alternate_group_box, 1, 1)
+        self.addWidget(self.profile_name_combo_box, 0, 0)
+        self.addWidget(self.load_profile_button, 0, 1)
+        self.addWidget(self.save_profile_button, 0, 2)
+        self.addWidget(self.delete_profile_button, 0, 3)
+        self.addWidget(self.all_normal_recipe_checkbox, 1, 0, 1, 2)
+        self.addWidget(self.all_alternate_recipe_checkbox, 1, 2, 1, 2)
+        self.addWidget(normal_group_box, 2, 0, 1, 2)
+        self.addWidget(alternate_group_box, 2, 2, 1, 2)
 
     def generic_recipe_checkbox_callback(
         self,
@@ -107,3 +132,17 @@ class RecipeSelector(QGridLayout):
         check_state: Qt.CheckState
     ):
         print(recipe_checkbox_id)
+        print(is_alternate)
+        print(check_state)
+        # REMEMBER: if setting a checkbox to partially checked then said
+        # checkbox automatically becomes tristate
+        # so will need to have a mechanism to unset that
+
+    def recipe_category_checkbox_callback(
+        self,
+        is_alternate: bool,
+        check_state: Qt.CheckState
+    ):
+        # REMEMBER: need some handling for tristate - perhaps automatically
+        # disable it when set to a non-tristate value?
+        pass
