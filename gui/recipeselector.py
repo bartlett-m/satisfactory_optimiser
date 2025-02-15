@@ -1,6 +1,6 @@
 from functools import partial
 
-from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QComboBox, QPushButton
+from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QComboBox, QPushButton, QMessageBox
 from PySide6.QtCore import Qt, QSettings
 
 from satisfactoryobjects.recipes import Recipe
@@ -34,8 +34,10 @@ class RecipeSelector(QGridLayout):
         self.profile_name_combo_box.setEditable(True)
 
         self.load_profile_button = QPushButton('Load')
+        self.load_profile_button.clicked.connect(self.load_profile_callback)
         self.save_profile_button = QPushButton('💾 Save')
         self.delete_profile_button = QPushButton('🗑 Delete')
+        self.delete_profile_button.clicked.connect(self.delete_profile_callback)
 
         self.recipe_checkboxes: dict[str, QCheckBox] = dict()
         self.all_normal_recipe_checkbox = QCheckBox('All normal')
@@ -146,3 +148,85 @@ class RecipeSelector(QGridLayout):
         # REMEMBER: need some handling for tristate - perhaps automatically
         # disable it when set to a non-tristate value?
         pass
+
+    def load_profile_callback(self):
+        profile_name = self.profile_name_combo_box.currentText()
+        if self.recipe_selection_persistence_obj.value(
+            'profile-' + profile_name + '/is-legit'
+        ) != 'yes':
+            # error: trying to load non-existent profile
+            # TODO: special handling for default profile if not exists i.e.
+            # create it
+            msg_box = QMessageBox(None)
+            msg_box.setWindowTitle('Satisfactory Optimiser')
+            msg_box.setText(
+                'Cannot load non-existent profile "' + profile_name + '"'
+            )
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Abort)
+            msg_box.setIcon(QMessageBox.Icon.Critical)
+
+            _ = msg_box.exec()
+            return
+        else:
+            self.normal_recipes_active, self.alternate_recipes_active = 0, 0
+            for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
+                is_alternate = recipes[recipe_id].is_alternate
+                check_state = self.recipe_selection_persistence_obj.value(
+                    'profile-' + profile_name + '/recipes/' +
+                    ('alternate' if is_alternate else 'normal')
+                    + recipe_id
+                )
+                if check_state == '1':
+                    recipe_checkbox.setChecked(True)
+                    if is_alternate:
+                        self.alternate_recipes_active += 1
+                    else:
+                        self.normal_recipes_active += 1
+                elif check_state == '0':
+                    recipe_checkbox.setChecked(False)
+                else:
+                    # load default
+                    recipe_checkbox.setChecked(is_alternate)
+                    if is_alternate:
+                        self.alternate_recipes_active += 1
+            if self.normal_recipes_active == self.normal_recipes_available:
+                self.all_normal_recipe_checkbox.setChecked(True)
+                self.all_normal_recipe_checkbox.setTristate(False)
+            elif self.normal_recipes_active == 0:
+                self.all_normal_recipe_checkbox.setChecked(False)
+                self.all_normal_recipe_checkbox.setTristate(False)
+            else:
+                self.all_normal_recipe_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
+            if self.alternate_recipes_active == self.alternate_recipes_available:
+                self.all_alternate_recipe_checkbox.setChecked(True)
+                self.all_alternate_recipe_checkbox.setTristate(False)
+            elif self.alternate_recipes_active == 0:
+                self.all_alternate_recipe_checkbox.setChecked(False)
+                self.all_alternate_recipe_checkbox.setTristate(False)
+            else:
+                self.all_alternate_recipe_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
+        print(profile_name)
+        pass
+
+    def delete_profile_callback(self) -> None:
+        profile_name = self.profile_name_combo_box.currentText()
+        profile_idx = self.profile_name_combo_box.currentIndex()
+        DEBUG_TEMP = True
+        if self.profile_name_combo_box.findText(profile_name) != profile_idx or DEBUG_TEMP:
+            # error: user typed in a profile that does not exist and is likely
+            # not trying to delete the currently indexed profile
+            msg_box = QMessageBox(None)
+            msg_box.setWindowTitle('Satisfactory Optimiser')
+            msg_box.setText(
+                'Trying to delete a non-existent profile (presumably)!  '
+                'Aborted to prevent accidental deletion of another profile!'
+            )
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Abort)
+            msg_box.setIcon(QMessageBox.Icon.Critical)
+
+            _ = msg_box.exec()
+            return
