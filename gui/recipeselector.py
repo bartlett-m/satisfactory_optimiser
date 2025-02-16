@@ -53,20 +53,12 @@ class RecipeSelector(QGridLayout):
                 self.profile_name_combo_box.setCurrentIndex(idx+1)
             print(profile_name)
         self.recipe_selection_persistence_obj.endArray()
-        #self.recipe_selection_persistence_obj.beginWriteArray('profile-names', 3)
-        #self.recipe_selection_persistence_obj.setArrayIndex(0)
-        #self.recipe_selection_persistence_obj.setValue('profile-name', 'test')
-        #self.recipe_selection_persistence_obj.setArrayIndex(1)
-        #self.recipe_selection_persistence_obj.setValue('profile-name', 'user-default')
-        #self.recipe_selection_persistence_obj.setArrayIndex(2)
-        #self.recipe_selection_persistence_obj.setValue('profile-name', 'test 2')
-        #self.recipe_selection_persistence_obj.remove('profile-name')
-        #self.recipe_selection_persistence_obj.endArray()
 
 
         self.load_profile_button = QPushButton('Load')
         self.load_profile_button.clicked.connect(self.load_profile_callback)
         self.save_profile_button = QPushButton('💾 Save')
+        self.save_profile_button.clicked.connect(self.save_profile_callback)
         self.delete_profile_button = QPushButton('🗑 Delete')
         self.delete_profile_button.clicked.connect(
             self.delete_profile_callback
@@ -279,23 +271,9 @@ class RecipeSelector(QGridLayout):
     def load_profile_callback(self, internal_use_internal_load: bool = False):
         profile_name = self.profile_name_combo_box.currentText()
         profile_is_legit = self.recipe_selection_persistence_obj.value(
-            'profile-' + profile_name + '/is-legit'
+            'profile/' + profile_name + '/is-legit'
         ) == 'yes'
-        if (not profile_is_legit) and profile_name not in ('default', 'user-default'):
-            # error: trying to load non-existent profile
-            # TODO: special handling for default profile if not exists i.e.
-            # create it
-            msg_box = QMessageBox(None)
-            msg_box.setWindowTitle('Satisfactory Optimiser')
-            msg_box.setText(
-                'Cannot load non-existent profile "' + profile_name + '"'
-            )
-            msg_box.setStandardButtons(QMessageBox.StandardButton.Abort)
-            msg_box.setIcon(QMessageBox.Icon.Critical)
-
-            _ = msg_box.exec()
-            return
-        elif (not profile_is_legit) and profile_name == 'user-default':
+        if (not profile_is_legit) and profile_name == 'user-default' and internal_use_internal_load:
             msg_box = QMessageBox(None)
             msg_box.setWindowTitle('Satisfactory Optimiser')
             msg_box.setText(
@@ -309,47 +287,123 @@ class RecipeSelector(QGridLayout):
 
             self.profile_name_combo_box.setCurrentIndex(0)
             profile_name = 'default'
-        else:
+        elif (not profile_is_legit) and profile_name != 'default':
+            # error: trying to load non-existent profile
+            # TODO: special handling for default profile if not exists i.e.
+            # create it
+            msg_box = QMessageBox(None)
+            msg_box.setWindowTitle('Satisfactory Optimiser')
+            msg_box.setText(
+                'Cannot load non-existent profile "' + profile_name + '"'
+            )
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Abort)
+            msg_box.setIcon(QMessageBox.Icon.Critical)
+
+            _ = msg_box.exec()
+            return
+
+        self.all_normal_recipe_checkbox.setChecked(False)
+        self.all_alternate_recipe_checkbox.setChecked(False)
+        for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
+            is_alternate = recipe_id in self.alternate_recipe_identifiers
+            check_state = self.recipe_selection_persistence_obj.value(
+                'profile/' + profile_name + '/recipes/' +
+                ('alternate' if is_alternate else 'normal') + '/' + recipe_id
+            )
+            if check_state == '1':
+                recipe_checkbox.setChecked(True)
+            elif check_state == '0':
+                recipe_checkbox.setChecked(False)
+            else:
+                # load default
+                recipe_checkbox.setChecked(not is_alternate)
+        if self.normal_recipes_active == self.normal_recipes_available:
+            self.all_normal_recipe_checkbox.setChecked(True)
+            self.all_normal_recipe_checkbox.setTristate(False)
+        elif self.normal_recipes_active == 0:
             self.all_normal_recipe_checkbox.setChecked(False)
+            self.all_normal_recipe_checkbox.setTristate(False)
+        else:
+            self.all_normal_recipe_checkbox.setCheckState(
+                Qt.CheckState.PartiallyChecked
+            )
+        if (
+            self.alternate_recipes_active
+            ==
+            self.alternate_recipes_available
+        ):
+            self.all_alternate_recipe_checkbox.setChecked(True)
+            self.all_alternate_recipe_checkbox.setTristate(False)
+        elif self.alternate_recipes_active == 0:
             self.all_alternate_recipe_checkbox.setChecked(False)
-            for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
-                is_alternate = recipe_id in self.alternate_recipe_identifiers
-                check_state = self.recipe_selection_persistence_obj.value(
-                    'profile-' + profile_name + '/recipes/' +
-                    ('alternate' if is_alternate else 'normal')
-                    + recipe_id
+            self.all_alternate_recipe_checkbox.setTristate(False)
+        else:
+            self.all_alternate_recipe_checkbox.setCheckState(
+                Qt.CheckState.PartiallyChecked
+            )
+
+    def save_profile_callback(self) -> None:
+        profile_name = self.profile_name_combo_box.currentText()
+        if profile_name == 'default':
+            # error: trying to overwrite default profile
+            msg_box = QMessageBox(None)
+            msg_box.setWindowTitle('Satisfactory Optimiser')
+            msg_box.setText(
+                'Trying to overwrite the built-in default profile!\n'
+                'Hint: You can create a profile named "user-default", which '
+                'will load instead of the built-in default profile on '
+                'application start.\n'
+                'Hint: To create a new profile, type its name into the profile'
+                ' selection dropdown and then click the Save button.'
+            )
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Abort)
+            msg_box.setIcon(QMessageBox.Icon.Critical)
+
+            _ = msg_box.exec()
+            return
+        profile_idx_from_edit_text = self.profile_name_combo_box.findText(
+            profile_name
+        )
+        new_profile = profile_idx_from_edit_text == -1
+        if new_profile:
+            self.user_defined_profile_names.append(profile_name)
+            self.profile_name_combo_box.addItem(profile_name)
+            new_profile_name_combo_box_index = len(
+                self.user_defined_profile_names
+            )
+            self.recipe_selection_persistence_obj.beginWriteArray(
+                'profile-names', new_profile_name_combo_box_index
+            )
+            self.recipe_selection_persistence_obj.setArrayIndex(
+                new_profile_name_combo_box_index-1
+            )
+            self.recipe_selection_persistence_obj.setValue(
+                'profile-name',
+                profile_name
+            )
+            self.recipe_selection_persistence_obj.endArray()
+        for recipe_id_set, recipe_set_prefix in (
+            (self.normal_recipe_identifiers, 'normal'),
+            (self.alternate_recipe_identifiers, 'alternate')
+        ):
+            for recipe_id in recipe_id_set:
+                self.recipe_selection_persistence_obj.setValue(
+                    'profile/' + profile_name + '/recipes/' +
+                    recipe_set_prefix + '/' + recipe_id,
+                    (
+                        '1'
+                        if (
+                            self.recipe_checkboxes[recipe_id].checkState()
+                            ==
+                            Qt.CheckState.Checked
+                        )
+                        else '0'
+                    )
                 )
-                if check_state == '1':
-                    recipe_checkbox.setChecked(True)
-                elif check_state == '0':
-                    recipe_checkbox.setChecked(False)
-                else:
-                    # load default
-                    recipe_checkbox.setChecked(not is_alternate)
-            if self.normal_recipes_active == self.normal_recipes_available:
-                self.all_normal_recipe_checkbox.setChecked(True)
-                self.all_normal_recipe_checkbox.setTristate(False)
-            elif self.normal_recipes_active == 0:
-                self.all_normal_recipe_checkbox.setChecked(False)
-                self.all_normal_recipe_checkbox.setTristate(False)
-            else:
-                self.all_normal_recipe_checkbox.setCheckState(
-                    Qt.CheckState.PartiallyChecked
-                )
-            if (
-                self.alternate_recipes_active
-                ==
-                self.alternate_recipes_available
-            ):
-                self.all_alternate_recipe_checkbox.setChecked(True)
-                self.all_alternate_recipe_checkbox.setTristate(False)
-            elif self.alternate_recipes_active == 0:
-                self.all_alternate_recipe_checkbox.setChecked(False)
-                self.all_alternate_recipe_checkbox.setTristate(False)
-            else:
-                self.all_alternate_recipe_checkbox.setCheckState(
-                    Qt.CheckState.PartiallyChecked
-                )
+        self.recipe_selection_persistence_obj.setValue(
+            'profile/' + profile_name + '/is-legit',
+            'yes'
+        )
 
     def delete_profile_callback(self) -> None:
         profile_name = self.profile_name_combo_box.currentText()
@@ -380,7 +434,7 @@ class RecipeSelector(QGridLayout):
 
             _ = msg_box.exec()
             return
-        self.recipe_selection_persistence_obj.remove('profile-' + profile_name)
+        self.recipe_selection_persistence_obj.remove('profile/' + profile_name)
         self.user_defined_profile_names.remove(profile_name)
         self.profile_name_combo_box.removeItem(profile_idx)
         # set the selection back to the now-removed profile to prevent any
@@ -394,6 +448,9 @@ class RecipeSelector(QGridLayout):
         for idx, name in enumerate(self.user_defined_profile_names):
             self.recipe_selection_persistence_obj.setArrayIndex(idx)
             self.recipe_selection_persistence_obj.setValue('profile-name', name)
+        # purge the leftover element which is now out of array bounds
+        # if this element wasnt the one being deleted, it will have been
+        # shifted in bounds by the above loop
         self.recipe_selection_persistence_obj.setArrayIndex(
             len(self.user_defined_profile_names)
         )
