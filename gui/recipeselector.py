@@ -1,7 +1,7 @@
 from functools import partial
 
 from PySide6.QtWidgets import QFormLayout, QCheckBox, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QComboBox, QPushButton, QMessageBox
-from PySide6.QtCore import Qt, QSettings
+from PySide6.QtCore import Qt, QSettings, QSignalBlocker
 
 from satisfactoryobjects.recipes import Recipe
 # CAUTION: these better have been populated already, or things will definitely
@@ -38,16 +38,38 @@ class RecipeSelector(QGridLayout):
         # (dynamically created at runtime as all normal recipes, no alternate
         # recipes)
         self.profile_name_combo_box.setEditable(True)
+        n_user_defined_profiles = self.recipe_selection_persistence_obj.beginReadArray(
+            'profile-names'
+        )
+        for idx in range(n_user_defined_profiles):
+            self.recipe_selection_persistence_obj.setArrayIndex(idx)
+            profile_name = self.recipe_selection_persistence_obj.value('profile-name')
+        self.recipe_selection_persistence_obj.endArray()
+
 
         self.load_profile_button = QPushButton('Load')
         self.load_profile_button.clicked.connect(self.load_profile_callback)
         self.save_profile_button = QPushButton('💾 Save')
         self.delete_profile_button = QPushButton('🗑 Delete')
-        self.delete_profile_button.clicked.connect(self.delete_profile_callback)
+        self.delete_profile_button.clicked.connect(
+            self.delete_profile_callback
+        )
 
         self.recipe_checkboxes: dict[str, QCheckBox] = dict()
         self.all_normal_recipe_checkbox = QCheckBox('All normal')
+        self.all_normal_recipe_checkbox.checkStateChanged.connect(
+            partial(
+                self.recipe_category_checkbox_callback,
+                False
+            )
+        )
         self.all_alternate_recipe_checkbox = QCheckBox('All alternate')
+        self.all_alternate_recipe_checkbox.checkStateChanged.connect(
+            partial(
+                self.recipe_category_checkbox_callback,
+                True
+            )
+        )
         #for checkbox in (
         #    self.all_normal_recipe_checkbox,
         #    self.all_alternate_recipe_checkbox
@@ -131,16 +153,65 @@ class RecipeSelector(QGridLayout):
 
     def generic_recipe_checkbox_callback(
         self,
+        # TODO: this parameter doesnt actually seem to be that useful
         recipe_checkbox_id: str,
         is_alternate: bool,
         check_state: Qt.CheckState
     ):
-        print(recipe_checkbox_id)
-        print(is_alternate)
-        print(check_state)
+        #print(recipe_checkbox_id)
+        #print(is_alternate)
+        #print(check_state)
         # REMEMBER: if setting a checkbox to partially checked then said
         # checkbox automatically becomes tristate
         # so will need to have a mechanism to unset that
+        # also fun issue i found: when using setChecked on a checkbox that is
+        # initially in the PartiallyChecked state, it wont update until
+        # hovered over.  using setCheckState fixes this.
+        if is_alternate and check_state == Qt.CheckState.Checked:
+            self.alternate_recipes_active += 1
+            if self.alternate_recipes_available == self.alternate_recipes_active:
+                self.all_alternate_recipe_checkbox.setCheckState(
+                    Qt.CheckState.Checked
+                )
+                # will fire recipe_category_checkbox_callback and we can set
+                # it to not be tristate there
+            else:
+                self.all_alternate_recipe_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
+        elif is_alternate and check_state == Qt.CheckState.Unchecked:
+            self.alternate_recipes_active -= 1
+            if self.alternate_recipes_active == 0:
+                self.all_alternate_recipe_checkbox.setCheckState(
+                    Qt.CheckState.Unchecked
+                )
+                # see above - turning off tristate will be handled elsewhere
+            else:
+                self.all_alternate_recipe_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
+        elif (not is_alternate) and check_state == Qt.CheckState.Checked:
+            self.normal_recipes_active += 1
+            if self.normal_recipes_available == self.normal_recipes_active:
+                self.all_normal_recipe_checkbox.setCheckState(
+                    Qt.CheckState.Checked
+                )
+                # see above - turning off tristate will be handled elsewhere
+            else:
+                self.all_normal_recipe_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
+        else:  # by process of elimination...
+            self.normal_recipes_active -= 1
+            if self.normal_recipes_active == 0:
+                self.all_normal_recipe_checkbox.setCheckState(
+                    Qt.CheckState.Unchecked
+                )
+                # see above - turning off tristate will be handled elsewhere
+            else:
+                self.all_normal_recipe_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
 
     def recipe_category_checkbox_callback(
         self,
@@ -149,7 +220,44 @@ class RecipeSelector(QGridLayout):
     ):
         # REMEMBER: need some handling for tristate - perhaps automatically
         # disable it when set to a non-tristate value?
-        pass
+        # ALSO REMEMBER: if check_state is tristate, assume it was manually
+        # set to be that somewhere else (i.e. this is expected because of how
+        # these signals work) - just return early in that case
+        # ALSO REMEMBER: this only gets fired if the check state *changes* i.e.
+        # if the check state is set to the state it already was then this does
+        # NOT get called, which is actually quite convenient
+        if check_state == Qt.CheckState.PartiallyChecked:
+            return
+
+        firing_checkbox = (
+            self.all_alternate_recipe_checkbox
+            if is_alternate
+            else self.all_normal_recipe_checkbox
+        )
+
+        # block signals to prevent an infinite loop where the check state of
+        # this checkbox is repeatedly changed by the signal handlers for the
+        # individual recipe checkboxes and then that change causes the
+        # individual recipe checkboxes to be repeatedly changed themselves...
+        # you see where this is going
+        with QSignalBlocker(
+            firing_checkbox
+        ):
+            for identifier in (
+                self.alternate_recipe_identifiers
+                if is_alternate
+                else self.normal_recipe_identifiers
+            ):
+                self.recipe_checkboxes[identifier].setCheckState(
+                    check_state
+                )
+        # this has to be at the end.  i reckon setCheckState enables tristate
+        # itself before sending the signal or whatever but i have no idea.
+        # could also be some delay in a signal causing it to get blocked.
+        # either way, if this is before the individual recipe checkboxes are
+        # set (i.e. outside of the context-managed QSignalBlocker), it doesn't
+        # work, but it does work if its here.
+        firing_checkbox.setTristate(False)
 
     def load_profile_callback(self):
         profile_name = self.profile_name_combo_box.currentText()
@@ -170,7 +278,8 @@ class RecipeSelector(QGridLayout):
             _ = msg_box.exec()
             return
         else:
-            self.normal_recipes_active, self.alternate_recipes_active = 0, 0
+            self.all_normal_recipe_checkbox.setChecked(False)
+            self.all_alternate_recipe_checkbox.setChecked(False)
             for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
                 is_alternate = recipe_id in self.alternate_recipe_identifiers
                 check_state = self.recipe_selection_persistence_obj.value(
@@ -180,17 +289,11 @@ class RecipeSelector(QGridLayout):
                 )
                 if check_state == '1':
                     recipe_checkbox.setChecked(True)
-                    if is_alternate:
-                        self.alternate_recipes_active += 1
-                    else:
-                        self.normal_recipes_active += 1
                 elif check_state == '0':
                     recipe_checkbox.setChecked(False)
                 else:
                     # load default
                     recipe_checkbox.setChecked(not is_alternate)
-                    if not is_alternate:
-                        self.normal_recipes_active += 1
             if self.normal_recipes_active == self.normal_recipes_available:
                 self.all_normal_recipe_checkbox.setChecked(True)
                 self.all_normal_recipe_checkbox.setTristate(False)
