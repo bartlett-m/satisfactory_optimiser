@@ -28,8 +28,6 @@ class RecipeSelector(QGridLayout):
             'Satisfactory Optimiser'
         )
 
-        #self.recipe_selection_persistence_obj.setValue('recipes/alternate/TEST_EXAMPLE', 1)
-
         self.profile_name_combo_box = QComboBox()
         self.profile_name_combo_box.addItem('default')
         # TODO: have the 'default' profile not be saveable over.  have a
@@ -51,7 +49,6 @@ class RecipeSelector(QGridLayout):
                 # +1 to account for the fact that there is already the
                 # 'default' profile
                 self.profile_name_combo_box.setCurrentIndex(idx+1)
-            print(profile_name)
         self.recipe_selection_persistence_obj.endArray()
 
         self.load_profile_button = QPushButton('Load')
@@ -127,7 +124,6 @@ class RecipeSelector(QGridLayout):
             checkbox.checkStateChanged.connect(
                 partial(
                     self.generic_recipe_checkbox_callback,
-                    id_recipe_tuple[0],
                     id_recipe_tuple[1].is_alternate
                 )
             )
@@ -161,14 +157,9 @@ class RecipeSelector(QGridLayout):
 
     def generic_recipe_checkbox_callback(
         self,
-        # TODO: this parameter doesnt actually seem to be that useful
-        recipe_checkbox_id: str,
         is_alternate: bool,
         check_state: Qt.CheckState
     ):
-        #print(recipe_checkbox_id)
-        #print(is_alternate)
-        #print(check_state)
         # REMEMBER: if setting a checkbox to partially checked then said
         # checkbox automatically becomes tristate
         # so will need to have a mechanism to unset that
@@ -455,3 +446,14 @@ class RecipeSelector(QGridLayout):
         )
         self.recipe_selection_persistence_obj.remove('profile-name')
         self.recipe_selection_persistence_obj.endArray()
+
+    def get_disabled_recipes(self) -> list[Recipe]:
+        _ret: list[Recipe] = list()
+        for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
+            if recipe_checkbox.checkState() == Qt.CheckState.Unchecked:
+                _ret.append(
+                    recipes[recipe_id]
+                )
+        return _ret
+
+    disabled_recipes = property(get_disabled_recipes)
