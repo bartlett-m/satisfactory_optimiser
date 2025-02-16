@@ -274,7 +274,8 @@ class ProblemTabContent(QWidget):
         # get a more consistent look with the margins
         form_layout.addLayout(self.weightings_form)
 
-        form_layout.addLayout(RecipeSelector())
+        self.recipe_selector = RecipeSelector()
+        form_layout.addLayout(self.recipe_selector)
 
         # put the layout container widget in the scroll area
         form_container.setWidget(form_layout_container)
@@ -330,6 +331,8 @@ class ProblemTabContent(QWidget):
         # for the documentation on this.
         self.main_window_reference.qt_application_reference.processEvents()
 
+        disabled_recipes = self.recipe_selector.disabled_recipes
+
         self.main_window_reference.progress_dialog.reset_and_show()
 
         target_weights: list[tuple[str, float]] = self.targets_widget.get_constraints()
@@ -375,7 +378,10 @@ class ProblemTabContent(QWidget):
             #    constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), -1))
             # add data on the recipes producing this item
             try:
-                producing_recipes = lookup_recipes(resource)
+                producing_recipes = lookup_recipes(
+                    resource,
+                    disabled_recipes=disabled_recipes
+                )
                 for recipe in producing_recipes:
                     for flow_data in recipe.calc_resource_flow_rate(
                         calculated_direction=Direction.OUT,
@@ -419,7 +425,7 @@ class ProblemTabContent(QWidget):
                 # also TODO: put this in the try block somehow, and if the except block is triggered when this condition is met then swap the variable in the objective equation to be of the TOTAL type instead of the OUTPUT type, to keep the tableau smaller
                 constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.OUTPUT), 1))
             try:
-                for recipe in lookup_recipes(resource, True):
+                for recipe in lookup_recipes(resource, True, disabled_recipes):
                     for flow_data in recipe.calc_resource_flow_rate(
                         calculated_direction=Direction.IN,
                         positive_direction=Direction.IN
