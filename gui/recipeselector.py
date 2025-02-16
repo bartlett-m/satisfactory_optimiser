@@ -93,14 +93,6 @@ class RecipeSelector(QGridLayout):
             ).addRow(
                 id_recipe_tuple[1].user_facing_name, checkbox
             )
-            # default config: enable all the default recipes (since these are
-            # automatically available) but disable all the alternate recipes
-            # (since these are unlocked individually and randomly by scanning
-            # hard drives)
-            checkbox.setChecked(not id_recipe_tuple[1].is_alternate)
-            # will modify to be backed by something in the config
-            # TODO: above setChecked is effectively redundant as it would be
-            # easier to just load the default profile
 
             checkbox.checkStateChanged.connect(
                 partial(
@@ -134,6 +126,8 @@ class RecipeSelector(QGridLayout):
         self.addWidget(self.all_alternate_recipe_checkbox, 1, 2, 1, 2)
         self.addWidget(normal_group_box, 2, 0, 1, 2)
         self.addWidget(alternate_group_box, 2, 2, 1, 2)
+
+        self.load_profile_callback()
 
     def generic_recipe_checkbox_callback(
         self,
@@ -207,7 +201,11 @@ class RecipeSelector(QGridLayout):
                 self.all_normal_recipe_checkbox.setCheckState(
                     Qt.CheckState.PartiallyChecked
                 )
-            if self.alternate_recipes_active == self.alternate_recipes_available:
+            if (
+                self.alternate_recipes_active
+                ==
+                self.alternate_recipes_available
+            ):
                 self.all_alternate_recipe_checkbox.setChecked(True)
                 self.all_alternate_recipe_checkbox.setTristate(False)
             elif self.alternate_recipes_active == 0:
