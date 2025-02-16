@@ -39,7 +39,7 @@ class RecipeSelector(QGridLayout):
         # recipes)
         self.profile_name_combo_box.setEditable(True)
         n_user_defined_profiles = self.recipe_selection_persistence_obj.beginReadArray(
-            'profile-names'
+            'saved-profile-names'
         )
         self.user_defined_profile_names: list[str] = list()
         for idx in range(n_user_defined_profiles):
@@ -53,7 +53,6 @@ class RecipeSelector(QGridLayout):
                 self.profile_name_combo_box.setCurrentIndex(idx+1)
             print(profile_name)
         self.recipe_selection_persistence_obj.endArray()
-
 
         self.load_profile_button = QPushButton('Load')
         self.load_profile_button.clicked.connect(self.load_profile_callback)
@@ -271,7 +270,7 @@ class RecipeSelector(QGridLayout):
     def load_profile_callback(self, internal_use_internal_load: bool = False):
         profile_name = self.profile_name_combo_box.currentText()
         profile_is_legit = self.recipe_selection_persistence_obj.value(
-            'profile/' + profile_name + '/is-legit'
+            'profile-' + profile_name + '/is-legit'
         ) == 'yes'
         if (not profile_is_legit) and profile_name == 'user-default' and internal_use_internal_load:
             msg_box = QMessageBox(None)
@@ -307,7 +306,7 @@ class RecipeSelector(QGridLayout):
         for recipe_id, recipe_checkbox in self.recipe_checkboxes.items():
             is_alternate = recipe_id in self.alternate_recipe_identifiers
             check_state = self.recipe_selection_persistence_obj.value(
-                'profile/' + profile_name + '/recipes/' +
+                'profile-' + profile_name + '/recipes/' +
                 ('alternate' if is_alternate else 'normal') + '/' + recipe_id
             )
             if check_state == '1':
@@ -372,7 +371,7 @@ class RecipeSelector(QGridLayout):
                 self.user_defined_profile_names
             )
             self.recipe_selection_persistence_obj.beginWriteArray(
-                'profile-names', new_profile_name_combo_box_index
+                'saved-profile-names', new_profile_name_combo_box_index
             )
             self.recipe_selection_persistence_obj.setArrayIndex(
                 new_profile_name_combo_box_index-1
@@ -388,7 +387,7 @@ class RecipeSelector(QGridLayout):
         ):
             for recipe_id in recipe_id_set:
                 self.recipe_selection_persistence_obj.setValue(
-                    'profile/' + profile_name + '/recipes/' +
+                    'profile-' + profile_name + '/recipes/' +
                     recipe_set_prefix + '/' + recipe_id,
                     (
                         '1'
@@ -401,7 +400,7 @@ class RecipeSelector(QGridLayout):
                     )
                 )
         self.recipe_selection_persistence_obj.setValue(
-            'profile/' + profile_name + '/is-legit',
+            'profile-' + profile_name + '/is-legit',
             'yes'
         )
 
@@ -434,7 +433,7 @@ class RecipeSelector(QGridLayout):
 
             _ = msg_box.exec()
             return
-        self.recipe_selection_persistence_obj.remove('profile/' + profile_name)
+        self.recipe_selection_persistence_obj.remove('profile-' + profile_name)
         self.user_defined_profile_names.remove(profile_name)
         self.profile_name_combo_box.removeItem(profile_idx)
         # set the selection back to the now-removed profile to prevent any
@@ -443,7 +442,7 @@ class RecipeSelector(QGridLayout):
         # by clicking save)
         self.profile_name_combo_box.setEditText(profile_name)
         self.recipe_selection_persistence_obj.beginWriteArray(
-            'profile-names', len(self.user_defined_profile_names)
+            'saved-profile-names', len(self.user_defined_profile_names)
         )
         for idx, name in enumerate(self.user_defined_profile_names):
             self.recipe_selection_persistence_obj.setArrayIndex(idx)
