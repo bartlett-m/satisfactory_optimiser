@@ -1,7 +1,7 @@
 import logging
 from typing import Type
 from utils.queueutils import PrioritisedItem
-from queue import PriorityQueue
+from utils.trees import BinaryTreeNode
 
 toplevel_logger = logging.getLogger(__name__)
 
@@ -9,7 +9,7 @@ toplevel_logger = logging.getLogger(__name__)
 class SatisfactoryNativeClassHandler:
     logger = toplevel_logger.getChild("SatisfactoryNativeClassHandler")
     handlers: dict[str, Type["SatisfactoryNativeClassHandler"]] = dict()
-    _handler_queue: PriorityQueue[PrioritisedItem] = PriorityQueue()
+    _handler_queue: BinaryTreeNode = None
 
     def __init__(self, class_name, handler_function, defer_pass=0) -> None:
         SatisfactoryNativeClassHandler.logger.debug(
@@ -30,9 +30,14 @@ class SatisfactoryNativeClassHandler:
             SatisfactoryNativeClassHandler.logger.debug(
                     f'Enqueueing handling of class {obj["NativeClass"]}'
                 )
-            SatisfactoryNativeClassHandler._handler_queue.put(
-                PrioritisedItem(handler._defer_pass, obj)
-            )
+            if SatisfactoryNativeClassHandler._handler_queue is None:
+                SatisfactoryNativeClassHandler._handler_queue = BinaryTreeNode(
+                    PrioritisedItem(handler._defer_pass, obj)
+                )
+            else:
+                SatisfactoryNativeClassHandler._handler_queue.add_child(
+                    PrioritisedItem(handler._defer_pass, obj)
+                )
         except KeyError:
             # no registered handler for class
             SatisfactoryNativeClassHandler.logger.debug(
@@ -42,8 +47,8 @@ class SatisfactoryNativeClassHandler:
     def handle() -> None:
         """Execute the enqueued handlers"""
         SatisfactoryNativeClassHandler.logger.info("Running handlers")
-        while not SatisfactoryNativeClassHandler._handler_queue.empty():
-            obj = SatisfactoryNativeClassHandler._handler_queue.get().item
+        for prioritised_item in SatisfactoryNativeClassHandler._handler_queue.in_order_traverse():
+            obj = prioritised_item.item
             handler = SatisfactoryNativeClassHandler.handlers[
                 obj["NativeClass"]
             ]
