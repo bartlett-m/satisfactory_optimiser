@@ -72,10 +72,10 @@ class BinaryTreeNode(AbstractNode):
                 old_left = self.left
                 self.left = BinaryTreeNode(value, old_left)
 
-    def dfs(self):
+    def in_order_traverse(self):
         '''CAUTION: it is inadvisable to modify the binary tree midway through using this generator'''
         if self.left is not None:
-            yield from self.left.dfs()
+            yield from self.left.in_order_traverse()
         yield self.value
         if self.right is not None:
-            yield from self.right.dfs()
+            yield from self.right.in_order_traverse()
