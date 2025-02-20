@@ -15,8 +15,7 @@ from satisfactoryobjects import (
     itemhandler,
     recipehandler,
     machinehandler,
-    nativeclasses,
-    recipelookup
+    nativeclasses
 )
 
 VALID_LOG_VERBOSITY_LEVELS = {
@@ -250,47 +249,6 @@ def main(
     register_handlers()
 
     load_docs(configured_docs_path)
-
-    '''print(
-        [
-            item
-            for _, item
-            in itemhandler.items.items()
-        ]
-    )
-    print(
-        [
-            recipe
-            for _, recipe
-            in recipehandler.recipes.items()
-        ]
-    )
-    print(
-        [
-            recipe.calc_power_flow_rate()
-            for _, recipe
-            in recipehandler.recipes.items()
-        ]
-    )
-
-    print(
-        [
-            recipe
-            for recipe
-            in recipelookup.lookup_recipes(
-                itemhandler.items['Desc_IronPlate_C']
-            )
-        ]
-    )
-
-    # recipelookup.lookup_production_chain(
-    #     [itemhandler.items["Desc_Plastic_C"]]
-    # )
-
-    print()
-    print(recipehandler.recipes['Recipe_Plastic_C'].calc_resource_flow_rate())
-    print(itemhandler.items['Desc_LiquidOil_C'])
-    print(itemhandler.items['Desc_Coal_C'])'''
 
     # gui init
 

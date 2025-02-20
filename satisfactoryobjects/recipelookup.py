@@ -43,17 +43,4 @@ def lookup_recipes(
 
 # probably will become disused
 def lookup_production_chain(targets: list[Item]):
-    # NOT YET COMPLETE
-    for target in targets:
-        source_recipes = lookup_recipes(target)
-        for source_recipe in source_recipes:
-            print(source_recipe)
-            for dependency in source_recipe.dependencies:
-                print("dependency")
-                print(dependency.item)
-            for product in filterfalse(
-                lambda product: product.item == target,
-                source_recipe.products
-            ):
-                print("byproduct")
-                print(product.item)
+    raise NotImplementedError('THIS WAS MEANT TO BE DEAD CODE BUT ITS STILL BEING USED')

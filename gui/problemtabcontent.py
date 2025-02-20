@@ -373,9 +373,6 @@ class ProblemTabContent(QWidget):
                     1
                 )
             ]
-            # if a manual input of this resource exists, add it to the constraint
-            #if resource in manually_set_constraints:
-            #    constraint_variables.append(Variable(ItemVariableType(resource, ItemVariableTypes.MANUAL_INPUT), -1))
             # add data on the recipes producing this item
             try:
                 producing_recipes = lookup_recipes(
@@ -499,9 +496,9 @@ class ProblemTabContent(QWidget):
             recipe_weight_vars
         )))
 
-        # print(len(problem_constraints))
-
-        self.main_window_reference.simplex_worker_thread = SimplexWorker(problem_constraints)
+        self.main_window_reference.simplex_worker_thread = SimplexWorker(
+            problem_constraints
+        )
         self.main_window_reference.simplex_worker_thread.signals.result.connect(
             self.main_window_reference.process_simplex_result
         )
@@ -515,4 +512,6 @@ class ProblemTabContent(QWidget):
             self.main_window_reference.process_simplex_error
         )
 
-        self.main_window_reference.thread_pool.start(self.main_window_reference.simplex_worker_thread)
+        self.main_window_reference.thread_pool.start(
+            self.main_window_reference.simplex_worker_thread
+        )

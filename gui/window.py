@@ -150,7 +150,6 @@ class MainWindow(QMainWindow):
                     self.solution_tab_content_widget.add_recipe_usage_widget_to_detail_view_layout(
                         RecipeUsage(var_id.name, var_val)
                     )
-                    print(f'{var_id.name}: {var_val}')
                     total_power_usage += (
                         var_val * recipes[var_id.name].calc_power_flow_rate(
                             positive_direction=Direction.IN
@@ -164,5 +163,9 @@ class MainWindow(QMainWindow):
                             var_val
                         )
             elif var_id.type == VariableType.OBJECTIVE:
-                self.solution_tab_content_widget.set_objective_variable_value(var_val)
-        self.solution_tab_content_widget.set_total_power_consumption(total_power_usage)
+                self.solution_tab_content_widget.set_objective_variable_value(
+                    var_val
+                )
+        self.solution_tab_content_widget.set_total_power_consumption(
+            total_power_usage
+        )
