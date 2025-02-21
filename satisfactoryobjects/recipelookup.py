@@ -1,5 +1,4 @@
 import logging
-from itertools import filterfalse
 from .recipehandler import recipes
 from .items import Item
 from .recipes import Recipe
@@ -39,8 +38,3 @@ def lookup_recipes(
         )
 
     return _ret
-
-
-# probably will become disused
-def lookup_production_chain(targets: list[Item]):
-    raise NotImplementedError('THIS WAS MEANT TO BE DEAD CODE BUT ITS STILL BEING USED')
