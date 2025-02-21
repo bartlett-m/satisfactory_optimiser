@@ -274,6 +274,7 @@ class ProblemTabContent(QWidget):
         # get a more consistent look with the margins
         form_layout.addLayout(self.weightings_form)
 
+        form_layout.addWidget(QLabel('Recipes'))
         self.recipe_selector = RecipeSelector()
         form_layout.addLayout(self.recipe_selector)
 
