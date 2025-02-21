@@ -34,12 +34,30 @@ def handler(obj):
                     _class["ClassName"]
                 ),
                 float(_class["mManufactoringDuration"]),  # [sic]
-                # the three recipes using this dont make it clear how
-                # its defined
+                # the three recipes using this in update 8 didnt make it clear
+                # how variable power is defined
                 # it could be that the factor is the range and the constant
                 # is the minimum, or it could be that the constant is half the
                 # range and the factor is the average
-                float(_class["mVariablePowerConsumptionFactor"]),
+                # however some of the new release 1.0 recipes (such as all
+                # those that are currently made in the converter) clarify
+                # things:
+                # the lowest power consumption is defined as the power
+                # consumption constant
+                # the highest power consumption is defined as the sum of the
+                # power consumption constant and the power consumption factor
+                # in other words: the constant is the lowest power consumption
+                # and the factor is the range of power consumption
+                # for our purposes, we dont need to worry about the
+                # fluctuation, only the average power.  the machine starts at
+                # its average power and ends at its average power in each
+                # cycle, and changes linearly (so the average power
+                # consumption is always the constant plus half the factor)
+                (
+                    float(_class['mVariablePowerConsumptionConstant'])
+                    +
+                    (float(_class['mVariablePowerConsumptionFactor'])/2)
+                ),
                 is_alternate=check_if_recipe_alternate(
                     _class['FullName']
                 )
