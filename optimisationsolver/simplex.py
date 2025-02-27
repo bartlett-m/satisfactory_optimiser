@@ -387,12 +387,6 @@ class Tableau():
         # objective row, however it is more optimal to use the most negative
         # entry.
 
-        # hacky patch to try and make it not cycle by using blands rule
-        for column, entry in enumerate(self._tableau[-1]._row):
-            if entry < 0:
-                return column
-        raise SimplexAlgorithmDoneException()
-
     def _get_pivot_row(self, pivot_column: int) -> int:
         row_ratios: list[Fraction | None] = [
             pivot_div(row[-1], row[pivot_column])
