@@ -308,6 +308,19 @@ if __name__ == '__main__':
         # without the interpreter executable being in argv.  Python does not
         # expect this and will then discard our script path.  To fix this, we must
         # pass the entire original argv as the arguments.
+
+        # os.execvp does not work on windows if the executable has spaces in it, and there is no way to escape it.  also we dont get the benefits (same PID etc) of it.  best alternative was to use subprocess.run.  however, this has issues (e.g. stdout, stderr are buffered and thus you cant see them until the program is done) so some workarounds need to be performed.
+        if sys.platform == 'win32':
+            import subprocess
+            # work around aforementioned issue with stdout, stderr being buffered and thus not being shown until program terminates
+            os.environ[
+                'PYTHONUNBUFFERED'
+            ] = '1'  # this can actually be set to any arbitrary string to work
+
+            sys.exit(
+                subprocess.run(sys.orig_argv).returncode
+            )
+        
         os.execvp(sys.orig_argv[0], sys.orig_argv)
 
     app = QApplication(sys.argv)
