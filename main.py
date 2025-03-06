@@ -41,7 +41,7 @@ def get_default_satisfactory_docs_path() -> pathlib.Path | None:
     # lutris on linux) - will probably not get done due to not owning the game
     # on epic myself and not really having time to borrow a macbook to test
     # steam on macos
-    OLD_SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/Docs.json')
+    # OLD_SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/Docs.json')
     SATISFACTORY_DOCS = pathlib.Path('CommunityResources/Docs/en-GB.json')
     # also if you are reading this and have the time and it is after my nea
     # deadline and have satisfactory on eric james launcher i would appreciate
@@ -120,7 +120,8 @@ def parse_arguments(app: QApplication) -> tuple[pathlib.Path, int]:
 
     verbosity_level_option = QCommandLineOption(
         'l',
-        f'Log verbosity level (one of {", ".join([lvl for lvl in VALID_LOG_VERBOSITY_LEVELS])})',
+        'Log verbosity level (one of '
+        f'{", ".join([lvl for lvl in VALID_LOG_VERBOSITY_LEVELS])})',
         'verbosity',
         'warn'
     )
@@ -270,14 +271,17 @@ if __name__ == '__main__':
                 'io.github.bartlett-m.INTERNALEXPECTHASHRANDOMISATIONOFF'
             ] == '1':
                 print(
-                    'Hash randomisation should have been automatically disabled, but it is not!'
+                    'Hash randomisation should have been automatically '
+                    'disabled, but it is not!'
                 )
                 print(
-                    'Please relaunch the program without giving python the -R argument!'
+                    'Please relaunch the program without giving python the -R '
+                    'argument!'
                 )
             else:
                 print(
-                    'Internal environment variable used for state has corrupt value!'
+                    'Internal environment variable used for state has corrupt '
+                    'value!'
                 )
                 print(
                     'Please unset the following environment variable:'
@@ -302,17 +306,23 @@ if __name__ == '__main__':
         os.environ[
             'io.github.bartlett-m.INTERNALEXPECTHASHRANDOMISATIONOFF'
         ] = '1'
-        # The first item from argv is discarded by python3 (since it is normally
-        # the interpreter executable).  However, with os.execvp, the args
-        # specified are the entire argv, and thus it is possible to start python3
-        # without the interpreter executable being in argv.  Python does not
-        # expect this and will then discard our script path.  To fix this, we must
-        # pass the entire original argv as the arguments.
+        # The first item from argv is discarded by python3 (since it is
+        # normally the interpreter executable).  However, with os.execvp, the
+        # args specified are the entire argv, and thus it is possible to start
+        # python3 without the interpreter executable being in argv.  Python
+        # does not expect this and will then discard our script path.  To fix
+        # this, we must pass the entire original argv as the arguments.
 
-        # os.execvp does not work on windows if the executable has spaces in it, and there is no way to escape it.  also we dont get the benefits (same PID etc) of it.  best alternative was to use subprocess.run.  however, this has issues (e.g. stdout, stderr are buffered and thus you cant see them until the program is done) so some workarounds need to be performed.
+        # os.execvp does not work on windows if the executable has spaces in
+        # it, and there is no way to escape it.  also we dont get the benefits
+        # (same PID etc) of it.  best alternative was to use subprocess.run.
+        # however, this has issues (e.g. stdout, stderr are buffered and thus
+        # you cant see them until the program is done) so some workarounds
+        # need to be performed.
         if sys.platform == 'win32':
             import subprocess
-            # work around aforementioned issue with stdout, stderr being buffered and thus not being shown until program terminates
+            # work around aforementioned issue with stdout, stderr being
+            # buffered and thus not being shown until program terminates
             os.environ[
                 'PYTHONUNBUFFERED'
             ] = '1'  # this can actually be set to any arbitrary string to work
@@ -320,7 +330,7 @@ if __name__ == '__main__':
             sys.exit(
                 subprocess.run(sys.orig_argv).returncode
             )
-        
+
         os.execvp(sys.orig_argv[0], sys.orig_argv)
 
     app = QApplication(sys.argv)
