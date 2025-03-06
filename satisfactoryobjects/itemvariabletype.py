@@ -14,7 +14,11 @@ class ItemVariableTypes(IntEnum):
 
 
 class ItemVariableType():
-    def __init__(self, item: Item, type: ItemVariableTypes = ItemVariableTypes.TOTAL):
+    def __init__(
+        self,
+        item: Item,
+        type: ItemVariableTypes = ItemVariableTypes.TOTAL
+    ):
         self.item = item
         self.type = type
 

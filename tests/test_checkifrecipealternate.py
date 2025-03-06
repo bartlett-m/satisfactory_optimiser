@@ -7,12 +7,15 @@ class TestCheckIfRecipeAlternate(unittest.TestCase):
     # disable it
     def test_alternate_recipe_detected(self):
         self.assertTrue(checkifrecipealternate.check_if_recipe_alternate(
-            'BlueprintGeneratedClass /Game/FactoryGame/Recipes/AlternateRecipes/New_Update3/Recipe_Alternate_WetConcrete.Recipe_Alternate_WetConcrete_C'
+            'BlueprintGeneratedClass /Game/FactoryGame/Recipes/'
+            'AlternateRecipes/New_Update3/Recipe_Alternate_WetConcrete.'
+            'Recipe_Alternate_WetConcrete_C'
         ))
 
     def test_non_alternate_recipe_not_detected(self):
         self.assertFalse(checkifrecipealternate.check_if_recipe_alternate(
-            'BlueprintGeneratedClass /Game/FactoryGame/Recipes/Constructor/Recipe_Fabric.Recipe_Fabric_C'
+            'BlueprintGeneratedClass /Game/FactoryGame/Recipes/Constructor/'
+            'Recipe_Fabric.Recipe_Fabric_C'
         ))
 
     def test_buildable_recipe_not_detected(self):
@@ -20,5 +23,7 @@ class TestCheckIfRecipeAlternate(unittest.TestCase):
         # about the build gun and thus whether or not they are considered
         # alternate by the code is irrelevant
         self.assertFalse(checkifrecipealternate.check_if_recipe_alternate(
-            'BlueprintGeneratedClass /Game/FactoryGame/Buildable/Building/Wall/ConcreteWallSet/Recipe_Wall_Concrete_8x1.Recipe_Wall_Concrete_8x1_C'
+            'BlueprintGeneratedClass /Game/FactoryGame/Buildable/Building/Wall'
+            '/ConcreteWallSet/Recipe_Wall_Concrete_8x1.'
+            'Recipe_Wall_Concrete_8x1_C'
         ))

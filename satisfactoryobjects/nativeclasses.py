@@ -47,7 +47,9 @@ class SatisfactoryNativeClassHandler:
     def handle() -> None:
         """Execute the enqueued handlers"""
         SatisfactoryNativeClassHandler.logger.info("Running handlers")
-        for prioritised_item in SatisfactoryNativeClassHandler._handler_queue.in_order_traverse():
+        for prioritised_item in (
+            SatisfactoryNativeClassHandler._handler_queue.in_order_traverse()
+        ):
             obj = prioritised_item.item
             handler = SatisfactoryNativeClassHandler.handlers[
                 obj["NativeClass"]
