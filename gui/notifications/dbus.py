@@ -1,10 +1,12 @@
 from enum import Enum
 import functools
-import dbus # provided by dbus-python
+import dbus  # provided by dbus-python
 
 from .notificationurgency import NotificationUrgency
 
-# note that due to limitations of dbus-python, this enum must be used as DbusNotificationUrgency.SOMETHING.value
+
+# note that due to limitations of dbus-python, this enum must be used as
+# DbusNotificationUrgency.SOMETHING.value
 class DbusNotificationUrgency(Enum):
     LOW = dbus.Byte(0)
     NORMAL = dbus.Byte(1)
@@ -36,7 +38,8 @@ def convert_notification_urgency(urgency: NotificationUrgency) -> dbus.Byte:
 
 
 # when called, returns the id of the notification to allow it to be overwritten
-# cannot effectively use functools.partial due to the awkward order of the arguments of the original
+# cannot effectively use functools.partial due to the awkward order of the
+# arguments of the original
 def add_notification(
     summary: str,
     body: str = '',
@@ -49,9 +52,14 @@ def add_notification(
         '',  # would be app icon
         summary,  # brief description
         body,  # detailed description or empty
-        [],  # actions as array of strings - even elements from index 0 would be internal identifiers, odd elements are strings displayed to user
+        # actions as array of strings - even elements from index 0 would be
+        # internal identifiers, odd elements are strings displayed to user
+        [],
         hints,  # can be empty.  used to set urgency among other things
-        timeout  # expire timeout.  -1 for server settings (generally dependent on urgency), 0 for never, anything above for time in ms after which the notification should be closed
+        # expire timeout.  -1 for server settings (generally dependent on
+        # urgency), 0 for never, anything above for time in ms after which the
+        # notification should be closed
+        timeout
     )
 
 
