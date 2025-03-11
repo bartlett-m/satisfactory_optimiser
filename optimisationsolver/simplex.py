@@ -228,7 +228,7 @@ class Tableau():
         self,
         inequalities: list[Inequality],
     ) -> None:
-        self._tableau: list[list[Fraction]] = []
+        self._tableau: list[TableauRow] = []
         _vars = set()
         for inequality in inequalities:
             for variable_id in inequality._lhs:
