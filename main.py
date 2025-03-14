@@ -320,6 +320,9 @@ if __name__ == '__main__':
         # you cant see them until the program is done) so some workarounds
         # need to be performed.
         if sys.platform == 'win32':
+            # its bad practice to put imports not at the top of the file, but
+            # since this is only used on a specific platform and even then not
+            # always its more sensible to not import it if its not needed.
             import subprocess
             # work around aforementioned issue with stdout, stderr being
             # buffered and thus not being shown until program terminates
