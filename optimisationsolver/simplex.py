@@ -185,8 +185,7 @@ class Inequality():
         doc="The coefficient of the objective variable"
     )
 
-    def tableau_left_padded(self, _vars: list[Variable]):
-
+    def tableau_left_padded(self, _vars: list):
         for variable_id in _vars:
             # this isnt all executed at once (it is paused after each yield
             # until the next item is requested)
