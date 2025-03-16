@@ -56,6 +56,17 @@ The program is divided up into three tabs (problem, solution, settings), with th
 ![A screenshot of the solution tab before a solution has been calculated.  It is annotated to display information about what the different areas will contain.](../readmeassets/solution-tab-empty.jpg?raw=true)
 
 ![A screenshot of the solution tab after a solution has been calculated.  It is annotated to display information about what the different areas that were not annotated in the pre-calculation screenshot contain.](../readmeassets/solution-tab-with-solution.jpg?raw=true)
+Note that the sum of the clock speeds is *represented as a decimal instead of a percentage* (such that if a whole number of machines was used it would equal the number of machines, not 100 times the number of machines).
+
+The solution tab contains two sections:
+1) At the top there is a scrollable area which will list all the recipes used in the solution, including data required to construct them, such as the sum of the clock speeds and the total item flow rates (useful for planning item routing e.g. representing the flows as a graph or determining which tier of belt/pipe is required for a manifold).
+2) At the bottom there is a region that provides a quick overview of the solution, with data such as the total power consumed and the total production output of each of the requested items.  The value of the objective variable is also present (this is the value that the algorithm is trying to maximise).
+
+A splitter handle is present between the two sections, which allows the space to be reallocated between them.  It is also possible to use this to hide the quick overview (e.g. if the solution is deemed suitable by the user, they can collapse the quick overview so that more space is available for them to read the list of recipes used).
+
+The contents of this tab are *cleared immediately when re-running the optimisation*, to avoid confusion if the progress dialog becomes hidden before the algorithm completes.  If one desires to retain a record of a solution, I would suggest screenshotting it, scrolling through the production overview and details as required.
+
+Multiple recipes may appear on one line of the list of all recipes used if sufficient horizontal space is available.
 
 ### Settings tab
 
