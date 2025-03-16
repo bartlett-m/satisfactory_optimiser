@@ -55,6 +55,8 @@ The program is divided up into three tabs (problem, solution, settings), with th
 
 ![A screenshot of the solution tab before a solution has been calculated.  It is annotated to display information about what the different areas will contain.](../readmeassets/solution-tab-empty.jpg?raw=true)
 
+![A screenshot of the solution tab after a solution has been calculated.  It is annotated to display information about what the different areas that were not annotated in the pre-calculation screenshot contain.](../readmeassets/solution-tab-with-solution.jpg?raw=true)
+
 ### Settings tab
 
 ![A screenshot of the settings tab, showing all the notification backends to be available, with the D-Bus backend selected](../readmeassets/2025-03-16T13:00:40,923934561+00:00.png?raw=true)
