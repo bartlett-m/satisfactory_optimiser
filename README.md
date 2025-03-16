@@ -42,3 +42,25 @@ On any system, it is suggested to set the `PYTHONHASHSEED` environment variable 
 `-p <path>` can be used to manually specify the path to the Docs.json file (if it has not been autodetected, or if you wish to use a path different to the one that was autodetected).  The default path depends on the platform the program is run on.
 
 `-l <verbosity>` sets the log level.  Logs from the current program run are output to a file named `last.log`, which is overwritten if the program is restarted.  The verbosity can be one of `debug`, `info`, `warn`, `error`, `crit` (with `debug` being the most verbose and `crit` being the least).  The default is `warn`.
+
+## Usage
+
+The program is divided up into three tabs (problem, solution, settings), with the program selecting the problem tab when first started.  The problem tab is used to define the linear programming problem, the solution tab is used to view the solution that is calculated, and the settings tab is used to specify miscellaneous program settings.
+
+### Problem tab
+
+(todo)
+
+### Solution tab
+
+(todo)
+
+### Settings tab
+
+![A screenshot of the settings tab, showing all the notification backends to be available, with the D-Bus backend selected](../readmeassets/2025-03-16T13:00:40,923934561+00:00.png?raw=true)
+
+Currently, the only setting available is the notification backend.  If the module required by a notification backend fails to import, the corresponding backend will be unavailable for selection.  If the saved settings specify a backend that would be unavailable in this way, a dialog will be displayed when the program starts offering to reset the settings to their defaults or terminate the program to allow for manual troubleshooting and rectification.
+
+Settings are **not applied** unless the "Apply" button is clicked.  Once this is done, the settings will then be saved to disk and take effect on the program.
+
+To reload the stored settings from disk, the "Cancel" button can be clicked.  This will revert what is displayed in the settings tab to match what is in use by the program (and is saved on disk).
