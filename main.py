@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env -S PYTHONHASHSEED=0 python3
+# The -S means "split string" i.e. if it is part of one element of argv then
+# break that argument into separate arguments on spaces.  This is required if
+# passing multiple arguments in a shebang, since Linux will pass everything
+# past the first space in the shebang as a single argument to the program.
+# -S isn't exactly portable (it is available from GNU coreutils 8.30) but it
+# has worked on both systems that I tried it on.
 import json
 import logging
 import pathlib
