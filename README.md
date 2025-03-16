@@ -51,6 +51,25 @@ The program is divided up into three tabs (problem, solution, settings), with th
 
 ![A screenshot of the problem tab with some values input.  It is annotated to display information about the different sections.](../readmeassets/problem-tab-annotated.jpg?raw=true)
 
+The problem tab contains four sections to define the problem:
+1) The target definition, where the target items and their weightings are specified.
+2) The resource availability definition, where constraints on the availability of certain resources are specified.
+3) The weightings definition, where miscellaneous weightings (currently just power usage) are specified.
+4) The recipe selection, where the algorithm can be forbidden to use certain recipes in its solution.
+Finally, there is the "Run Optimisation" button, the purpose of which should be self-explanatory.
+
+To add a second target, the Add button next to "Target Weightings" can be clicked.  Note that adding multiple targets may result in the algorithm only producing one if weights and other constraints are not set carefully.
+
+To add other available resources (other than the basic ores and fluids listed by default) as an input, the Add button next to "Resource Availability" can be clicked.  Here, care does not need to be taken in specifying which resources are available if multiple are to be made avaliable in the same way as multiple targets, *unless* using multiple targets (generally, this program is not good at handling multiple targets outside of specific scenarios).
+
+As the user, you should be aware that the power usage weighting should be set quite low compared to the target weightings (by 3 orders of magnitude at minimum), since it is measured in megawatts (and most recipes consume quite a few megawatts).  If not, any recipe the algorithm chooses will decrease the objective variable by consuming power more than it will increase it by producing the target item, and the algorithm will fail.  If required, the weights of all the target items can be increased by one or more orders of magnitude (if the weight on the power usage cannot be set to a small enough value).  It should also be noted that setting a power usage weight tends to make the algorithm take a lot longer, for some reason.
+
+The recipes used will be the ones that were selected at the time of running, not the ones listed in the selected profile on the disk.  However, to save to the selected profile on the disk, the user must click the save button.  To create a new profile, its name can be typed into the dropdown box and then save clicked.  Saving over the default profile is not possible, but if a profile named `user-default` is present then it will be loaded at startup instead of the built-in default profile.  The application will open a dialog to provide this info if saving over the default profile is attempted.
+
+Profiles only save which recipes are active - they do not save the other inputs or any calculated solution.  The application settings are saved, loaded, and stored separately.
+
+Profiles can be loaded on docs files from other versions of the game, with some caveats.  Recipes that did not exist when the profile was generated will be deselected.  Recipes that existed when the profile was created will be deselected if reloaded against a docs file that does contain them if the profile is saved over (if the profile is not saved over then this will not occur).  The built-in default profile is unaffected, since it is unwriteable and only enables any recipe that is in the normal category.
+
 ### Solution tab
 
 ![A screenshot of the solution tab before a solution has been calculated.  It is annotated to display information about what the different areas will contain.](../readmeassets/solution-tab-empty.jpg?raw=true)
