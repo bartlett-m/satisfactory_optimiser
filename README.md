@@ -53,7 +53,7 @@ The program is divided up into three tabs (problem, solution, settings), with th
 
 ### Solution tab
 
-(todo)
+![A screenshot of the solution tab before a solution has been calculated.  It is annotated to display information about what the different areas will contain.](../readmeassets/solution-tab-empty.jpg?raw=true)
 
 ### Settings tab
 
