@@ -49,7 +49,7 @@ The program is divided up into three tabs (problem, solution, settings), with th
 
 ### Problem tab
 
-![A screenshot of the problem tab with some values input.  It is annotated to display information about the different sections.](../readmeassets/problem-tab-annoated.jpg?raw=true)
+![A screenshot of the problem tab with some values input.  It is annotated to display information about the different sections.](../readmeassets/problem-tab-annotated.jpg?raw=true)
 
 ### Solution tab
 
