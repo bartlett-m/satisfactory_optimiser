@@ -31,7 +31,7 @@ toplevel_logger = logging.getLogger(__name__)
 
 failed_notification_backend_imports: set[str] = set()
 notification_senders = {
-    'null': lambda summary, body, urgency, id_to_replace = 0: 0
+    'null': lambda summary, body = '', urgency = NotificationUrgency.NORMAL, id_to_replace = 0: 0
 }
 
 try:
