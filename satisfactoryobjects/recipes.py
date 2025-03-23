@@ -124,10 +124,16 @@ class Recipe(BaseSatisfactoryObject):
                 else 1
             )
         else:
+            # Power flow rate on fixed power machines is defined internally in
+            # my code as being positive for output.
+            # I forgot that I defined the equivalent for recipes (when used
+            # with variable power machines) as the power consumption (i.e. the
+            # sign is flipped relative to the fixed power machines).
+            # Cue bugfix.
             return self.__average_power_consumption * (
-                -1
+                1
                 if positive_direction == Direction.IN
-                else 1
+                else -1
             )
 
     def parse_resources(
